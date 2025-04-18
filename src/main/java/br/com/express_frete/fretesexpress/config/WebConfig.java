@@ -1,4 +1,4 @@
-package br.com.express_frete.freteexress.config;
+package br.com.express_frete.fretesexpress.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
