@@ -1,7 +1,7 @@
 package br.com.express_frete.fretesexpress.controller;
 
-import br.com.express_frete.fretesexpress.model.FretesExpress;
-import br.com.express_frete.fretesexpress.repository.FretesExpressRepository;
+import br.com.express_frete.fretesexpress.model.Frete;
+import br.com.express_frete.fretesexpress.repository.FreteRepository;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -13,16 +13,16 @@ import org.springframework.web.bind.annotation.*;
 public class FreteExpressController {
 
     @Autowired
-    private FretesExpressRepository repository;
+    private FreteRepository repository;
 
     @GetMapping("/novo")
     public String formNovoFrete(Model model) {
-        model.addAttribute("frete", new FretesExpress());
+        model.addAttribute("frete", new Frete());
         return "createFrete";
     }
 
     @PostMapping
-    public String salvarFrete(@ModelAttribute("frete") @Valid FretesExpress frete) {
+    public String salvarFrete(@ModelAttribute("frete") @Valid Frete frete) {
         repository.save(frete);
         return "redirect:/fretes/listar";
     }
