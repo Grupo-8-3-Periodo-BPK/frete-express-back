@@ -3,6 +3,8 @@ package br.com.express_frete.fretesexpress.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import br.com.express_frete.fretesexpress.model.enums.FreteStatus;
 
 @Entity
 @Table(name = "frete")
@@ -45,7 +47,13 @@ public class Frete {
     @NotBlank
     private String estadoDestino;
 
-    // Getters e Setters
+    @Enumerated(EnumType.STRING)
+    private FreteStatus status;
+
+    private LocalDateTime dataHoraAprovacaoCliente;
+    private LocalDateTime dataHoraAprovacaoMotorista;
+
+// Getters e Setters
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -82,4 +90,7 @@ public class Frete {
 
     public String getEstadoDestino() { return estadoDestino; }
     public void setEstadoDestino(String estadoDestino) { this.estadoDestino = estadoDestino; }
+
+    public FreteStatus getStatus() { return status; }
+    public void setStatus(FreteStatus status) { this.status = status; }
 }

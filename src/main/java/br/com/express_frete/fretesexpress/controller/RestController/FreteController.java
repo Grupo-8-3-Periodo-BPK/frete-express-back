@@ -2,8 +2,10 @@ package br.com.express_frete.fretesexpress.controller.RestController;
 
 import br.com.express_frete.fretesexpress.model.Frete;
 import br.com.express_frete.fretesexpress.repository.FreteRepository;
+import br.com.express_frete.fretesexpress.service.FreteService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,6 +16,9 @@ public class FreteController {
 
     @Autowired
     private FreteRepository repository;
+
+    @Autowired
+    private FreteService freteService;
 
     @GetMapping
     public List<Frete> listar() {
@@ -51,5 +56,14 @@ public class FreteController {
     @DeleteMapping("/{id}")
     public void deletar(@PathVariable Long id) {
         repository.deleteById(id);
+    }
+
+    @PutMapping("/aprovar/{id}")
+    public ResponseEntity<Frete> aprovarFrete(
+            @PathVariable Long id,
+            @RequestParam String aprovador // cliente ou motorista
+    ) {
+        Frete freteAtualizado = freteService.aprovarFrete(id, aprovador);
+        return ResponseEntity.ok(freteAtualizado);
     }
 }
