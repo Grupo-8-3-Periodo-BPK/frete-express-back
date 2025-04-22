@@ -2,9 +2,13 @@ package br.com.express_frete.fretesexpress.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
+import java.sql.Date;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import org.springframework.boot.context.properties.bind.DefaultValue;
 import br.com.express_frete.fretesexpress.model.enums.FreteStatus;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 @Entity
 @Table(name = "frete")
@@ -53,6 +57,13 @@ public class Frete {
     private LocalDateTime dataHoraAprovacaoCliente;
     private LocalDateTime dataHoraAprovacaoMotorista;
 
+    @CreationTimestamp
+    @Column(updatable = false)
+    private LocalDateTime dataCriacao;
+
+    @UpdateTimestamp
+    private LocalDateTime dataModificacao;
+
 // Getters e Setters
 
     public Long getId() { return id; }
@@ -93,4 +104,10 @@ public class Frete {
 
     public FreteStatus getStatus() { return status; }
     public void setStatus(FreteStatus status) { this.status = status; }
+
+    public LocalDateTime getDataCriacao() {return dataCriacao;}
+    public void setDataCriacao(LocalDateTime dataCriacao) {this.dataCriacao = dataCriacao;}
+
+    public LocalDateTime getDataModificacao() {return dataModificacao;}
+    public void setDataModificacao(LocalDateTime dataModificacao) {this.dataModificacao = dataModificacao;}
 }

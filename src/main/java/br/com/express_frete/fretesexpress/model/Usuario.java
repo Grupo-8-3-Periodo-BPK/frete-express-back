@@ -62,27 +62,12 @@ public class Usuario {
     public List<Avaliacao> getAvaliacoesFeitas() { return avaliacoesFeitas; }
     public void setAvaliacoesFeitas(List<Avaliacao> avaliacoesFeitas) { this.avaliacoesFeitas = avaliacoesFeitas; }
 
-    public Integer getTotalAvaliacoesRecebidas() {
-        return totalAvaliacoesRecebidas;
-    }
+    public Integer getTotalAvaliacoesRecebidas() {return totalAvaliacoesRecebidas;}
+    public void setTotalAvaliacoesRecebidas(Integer totalAvaliacoesRecebidas) {this.totalAvaliacoesRecebidas = totalAvaliacoesRecebidas;}
 
-    public void setTotalAvaliacoesRecebidas(Integer totalAvaliacoesRecebidas) {
-        this.totalAvaliacoesRecebidas = totalAvaliacoesRecebidas;
-    }
+    public Integer getTotalAvaliacoesFeitas() {return totalAvaliacoesFeitas;}
+    public void setTotalAvaliacoesFeitas(Integer totalAvaliacoesFeitas) {this.totalAvaliacoesFeitas = totalAvaliacoesFeitas;}
 
-    public Integer getTotalAvaliacoesFeitas() {
-        return totalAvaliacoesFeitas;
-    }
-
-    public void setTotalAvaliacoesFeitas(Integer totalAvaliacoesFeitas) {
-        this.totalAvaliacoesFeitas = totalAvaliacoesFeitas;
-    }
-
-    public void incrementarAvaliacoesFeitas() {
-        this.totalAvaliacoesFeitas++;
-    }
-
-    public void incrementarAvaliacoesRecebidas() {
-        this.totalAvaliacoesRecebidas++;
-    }
+    public void incrementarAvaliacoesFeitas() {this.totalAvaliacoesFeitas++;}
+    public void incrementarAvaliacoesRecebidas() {this.totalAvaliacoesRecebidas++;}
 }
