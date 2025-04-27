@@ -4,7 +4,7 @@ import br.com.express_frete.fretesexpress.model.enums.Role;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -30,7 +30,6 @@ public class Usuario {
     private Integer totalAvaliacoesRecebidas = 0;
     private Integer totalAvaliacoesFeitas = 0;
 
-    // Relacionamentos mantidos para uso interno, mas marcados para não serem serializados
     @OneToMany(mappedBy = "motorista")
     @JsonIgnore
     private List<Avaliacao> avaliacoesRecebidas;
@@ -38,6 +37,11 @@ public class Usuario {
     @OneToMany(mappedBy = "cliente")
     @JsonIgnore
     private List<Avaliacao> avaliacoesFeitas;
+
+    @Column(nullable = false, columnDefinition = "INT DEFAULT 0")
+    private Integer tentativasLogin = 0; // Inicializado como 0
+
+    private LocalDateTime dataBloqueio;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -84,5 +88,38 @@ public class Usuario {
 
     public void incrementarAvaliacoesRecebidas() {
         this.totalAvaliacoesRecebidas++;
+    }
+
+    public Integer getTentativasLogin() {
+        return tentativasLogin;
+    }
+
+    public void setTentativasLogin(Integer tentativasLogin) {
+        this.tentativasLogin = tentativasLogin;
+    }
+
+    public LocalDateTime getDataBloqueio() {
+        return dataBloqueio;
+    }
+
+    public void setDataBloqueio(LocalDateTime dataBloqueio) {
+        this.dataBloqueio = dataBloqueio;
+    }
+
+    public void incrementarTentativasLogin() {
+        this.tentativasLogin = (this.tentativasLogin == null ? 0 : this.tentativasLogin) + 1;
+    }
+
+    public void resetarTentativasLogin() {
+        this.tentativasLogin = 0;
+    }
+
+    public boolean isBloqueado() {
+        if (dataBloqueio == null) return false;
+        return dataBloqueio.plusMinutes(15).isAfter(LocalDateTime.now());
+    }
+
+    public void bloquear() {
+        this.dataBloqueio = LocalDateTime.now();
     }
 }
