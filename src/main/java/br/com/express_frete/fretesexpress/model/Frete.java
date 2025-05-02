@@ -47,6 +47,12 @@ public class Frete {
     @NotBlank
     private String estadoDestino;
 
+    @NotBlank
+    private String tipoCaminhao;
+
+    @NotBlank
+    private String tipoCarga;
+
     @Enumerated(EnumType.STRING)
     private FreteStatus status;
 
@@ -90,6 +96,12 @@ public class Frete {
 
     public String getEstadoDestino() { return estadoDestino; }
     public void setEstadoDestino(String estadoDestino) { this.estadoDestino = estadoDestino; }
+
+    public @NotBlank String getTipoCaminhao() {return tipoCaminhao;}
+    public void setTipoCaminhao(@NotBlank String tipoCaminhao) {this.tipoCaminhao = tipoCaminhao;}
+
+    public @NotBlank String getTipoCarga() {return tipoCarga;}
+    public void setTipoCarga(@NotBlank String tipoCarga) {this.tipoCarga = tipoCarga;}
 
     public FreteStatus getStatus() { return status; }
     public void setStatus(FreteStatus status) { this.status = status; }

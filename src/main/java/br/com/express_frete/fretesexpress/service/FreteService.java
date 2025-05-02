@@ -28,6 +28,8 @@ public class FreteService {
         dto.setEstadoOrigem(frete.getEstadoOrigem());
         dto.setCidadeDestino(frete.getCidadeDestino());
         dto.setEstadoDestino(frete.getEstadoDestino());
+        dto.setTipoCaminhao(frete.getTipoCaminhao());
+        dto.setTipoCarga(frete.getTipoCarga());
         dto.setStatus(frete.getStatus());
         return dto;
     }
@@ -47,6 +49,8 @@ public class FreteService {
         frete.setEstadoOrigem(dto.getEstadoOrigem());
         frete.setCidadeDestino(dto.getCidadeDestino());
         frete.setEstadoDestino(dto.getEstadoDestino());
+        frete.setTipoCaminhao(dto.getTipoCaminhao());
+        frete.setTipoCarga(dto.getTipoCarga());
         frete.setStatus(dto.getStatus());
         return frete;
     }
@@ -75,5 +79,10 @@ public class FreteService {
         }
 
         return freteRepository.save(frete);
+    }
+    //metodo para filtrar frete
+    public List<FreteDTO> filtrarFretes(String cidadeOrigem, String cidadeDestino, String tipoCaminhao, String tipoCarga) {
+        List<Frete> fretes = freteRepository.buscarPorFiltros(cidadeOrigem, cidadeDestino, tipoCaminhao, tipoCarga);
+        return fretes.stream().map(this::toDTO).toList();
     }
 }

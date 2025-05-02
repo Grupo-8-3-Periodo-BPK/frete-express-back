@@ -25,6 +25,16 @@ public class FreteController {
         return repository.findAll();
     }
 
+    @GetMapping("/filtrar")
+    public List<FreteDTO> filtrarFretes(
+            @RequestParam(required = false) String cidadeOrigem,
+            @RequestParam(required = false) String cidadeDestino,
+            @RequestParam(required = false) String tipoCaminhao,
+            @RequestParam(required = false) String tipoCarga
+    ) {
+        return freteService.filtrarFretes(cidadeOrigem, cidadeDestino, tipoCaminhao, tipoCarga);
+    }
+
     @PostMapping
     public Frete cadastrar(@RequestBody @Valid Frete frete) {
         return repository.save(frete);

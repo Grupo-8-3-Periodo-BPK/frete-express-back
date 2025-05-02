@@ -8,4 +8,6 @@ public class FreteDTO {
     private FreteStatus status;
     private LocalDateTime dataHoraAprovacaoCliente;
     private LocalDateTime dataHoraAprovacaoMotorista;
+    private String tipoCaminhao;
+    private String tipoCarga;
 }
