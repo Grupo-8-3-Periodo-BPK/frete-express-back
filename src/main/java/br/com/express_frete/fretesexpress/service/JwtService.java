@@ -57,17 +57,27 @@ public class JwtService {
      * @return JWT token
      */
     public String generateToken(User user) {
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("id", user.getId());
-        claims.put("email", user.getEmail());
-        claims.put("role", user.getRole().toString());
-        return Jwts.builder()
-                .setClaims(claims)
-                .setSubject(user.getId().toString())
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
-                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
-                .compact();
+        if (user == null || user.getId() == null) {
+            throw new IllegalArgumentException("Usuário inválido para geração de token");
+        }
+
+        try {
+            Map<String, Object> claims = new HashMap<>();
+            claims.put("id", user.getId());
+            claims.put("email", user.getEmail());
+            claims.put("role", user.getRole() != null ? user.getRole().toString() : "USER");
+
+            return Jwts.builder()
+                    .setClaims(claims)
+                    .setSubject(user.getId().toString())
+                    .setIssuedAt(new Date())
+                    .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
+                    .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                    .compact();
+        } catch (Exception e) {
+            System.out.println("Erro ao gerar token: " + e.getMessage());
+            throw new RuntimeException("Erro ao gerar token JWT", e);
+        }
     }
 
     /**
@@ -78,11 +88,23 @@ public class JwtService {
      * @throws JwtException if the token is invalid or expired
      */
     public Claims validateToken(String token) throws JwtException {
-        return Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
+        if (token == null || token.isEmpty()) {
+            throw new JwtException("Token vazio ou nulo");
+        }
+
+        try {
+            return Jwts.parserBuilder()
+                    .setSigningKey(getSigningKey())
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+        } catch (JwtException e) {
+            System.out.println("Erro na validação do token: " + e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            System.out.println("Erro inesperado na validação do token: " + e.getMessage());
+            throw new JwtException("Erro ao validar token: " + e.getMessage());
+        }
     }
 
     /**

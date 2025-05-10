@@ -3,11 +3,16 @@ package br.com.express_frete.fretesexpress.controller.RestController;
 import br.com.express_frete.fretesexpress.dto.AuthRequest;
 import br.com.express_frete.fretesexpress.dto.AuthResponse;
 import br.com.express_frete.fretesexpress.dto.TokenValidationResponse;
+import br.com.express_frete.fretesexpress.model.Token;
 import br.com.express_frete.fretesexpress.model.User;
 import br.com.express_frete.fretesexpress.repository.UserRepository;
 import br.com.express_frete.fretesexpress.service.JwtService;
+import br.com.express_frete.fretesexpress.service.TokenService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -29,69 +34,122 @@ public class AuthController {
     @Autowired
     private JwtService jwtService;
 
+    @Autowired
+    private TokenService tokenService;
+
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody @Valid AuthRequest authRequest) {
-        Optional<User> userOpt = verifyUser(authRequest.getLogin());
-        if (userOpt.isEmpty()) {
+    public ResponseEntity<?> login(@RequestBody @Valid AuthRequest authRequest, HttpServletResponse response) {
+        try {
+            // Verificar se o usuário existe
+            Optional<User> userOpt = verifyUser(authRequest.getLogin());
+            if (userOpt.isEmpty()) {
+                Map<String, String> error = new HashMap<>();
+                error.put("message", "Invalid credentials");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+            }
+            User user = userOpt.get();
+            // Verificar se a senha está correta
+            if (!passwordEncoder.matches(authRequest.getPassword(), user.getPassword())) {
+                Map<String, String> error = new HashMap<>();
+                error.put("message", "Invalid credentials");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+            }
+
+            // Criar token e salvá-lo no banco
+            Token token = tokenService.createToken(user);
+
+            // Configurar o cookie seguro
+            Cookie jwtCookie = new Cookie("jwt_token", token.getToken());
+            jwtCookie.setHttpOnly(true); // Impede acesso via JavaScript
+            jwtCookie.setSecure(true); // Envia apenas em HTTPS
+            jwtCookie.setPath("/"); // Disponível em todo o site
+            jwtCookie.setMaxAge(24 * 60 * 60); // Duração de 24 horas em segundos
+            response.addCookie(jwtCookie);
+
+            // Criar resposta sem incluir o token
+            AuthResponse authResponse = new AuthResponse();
+            authResponse.setId(user.getId());
+            authResponse.setName(user.getName());
+            authResponse.setEmail(user.getEmail());
+            authResponse.setRole(user.getRole());
+            authResponse.setExpiration(token.getExpiration());
+            
+
+            return ResponseEntity.ok(authResponse);
+        } catch (Exception e) {
+            System.out.println("Erro no login: " + e.getMessage());
             Map<String, String> error = new HashMap<>();
-            error.put("message", "Invalid credentials");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+            error.put("message", "Erro interno no servidor");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
-        User user = userOpt.get();
-
-        // Verify password using bcrypt
-        if (!passwordEncoder.matches(authRequest.getPassword(), user.getPassword())) {
-            Map<String, String> error = new HashMap<>();
-            error.put("message", "Invalid credentials");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
-        }
-        // Generate JWT token
-        String token = jwtService.generateToken(user);
-
-        // Create response object
-        AuthResponse response = new AuthResponse();
-        response.setToken(token);
-        response.setId(user.getId());
-        response.setName(user.getName());
-        response.setEmail(user.getEmail());
-        response.setRole(user.getRole());
-
-        return ResponseEntity.ok(response);
     }
 
-    private Optional<User> verifyUser(String login) {
-        // First try to find by email
-        Optional<User> userOpt = userRepository.findByEmail(login);
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
+        try {
+            String token = extractTokenFromRequest(request);
+            if (token != null) {
+                tokenService.invalidateToken(token);
+                System.out.println("Token invalidado com sucesso");
+            } else {
+                System.out.println("Tentativa de logout sem token");
+            }
 
-        if (userOpt.isPresent()) {
-            return userOpt;
+            // Remover o cookie
+            Cookie cookie = new Cookie("jwt_token", null);
+            cookie.setHttpOnly(true);
+            cookie.setPath("/");
+            cookie.setMaxAge(0); // Remove o cookie
+            response.addCookie(cookie);
+
+            Map<String, String> responseMap = new HashMap<>();
+            responseMap.put("message", "Logout successful");
+            return ResponseEntity.ok(responseMap);
+        } catch (Exception e) {
+            System.out.println("Erro no logout: " + e.getMessage());
+            Map<String, String> error = new HashMap<>();
+            error.put("message", "Erro ao realizar logout");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
-
-        // If not found by email, try by CPF/CNPJ
-        userOpt = userRepository.findByCpf_cnpj(login);
-
-        if (userOpt.isPresent()) {
-            return userOpt;
-        }
-
-        // If not found by CPF/CNPJ, try by username
-        return userRepository.findByUsername(login);
     }
 
     @PostMapping("/validate-token")
-    public ResponseEntity<?> validateToken(@RequestHeader("Authorization") String token) {
-        // Remove "Bearer " prefix if exists
-        if (token.startsWith("Bearer ")) {
-            token = token.substring(7);
-        }
-
+    public ResponseEntity<?> validateToken(HttpServletRequest request) {
         try {
-            // Validate token
+            String token = extractTokenFromRequest(request);
+            if (token == null) {
+                // Tentar extrair de cookies
+                Cookie[] cookies = request.getCookies();
+                if (cookies != null) {
+                    for (Cookie cookie : cookies) {
+                        if ("jwt_token".equals(cookie.getName())) {
+                            token = cookie.getValue();
+                            break;
+                        }
+                    }
+                }
+
+                if (token == null) {
+                    Map<String, Object> response = new HashMap<>();
+                    response.put("valid", false);
+                    response.put("message", "Token não fornecido ou formato inválido");
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+                }
+            }
+
+            // Verificar se o token existe e é válido no banco
+            if (!tokenService.isTokenValid(token)) {
+                Map<String, Object> response = new HashMap<>();
+                response.put("valid", false);
+                response.put("message", "Token inválido ou expirado");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            }
+
+            // Validar o token JWT
             Claims claims = jwtService.validateToken(token);
 
-            // If we got here, token is valid
             TokenValidationResponse response = new TokenValidationResponse();
             response.setValid(true);
             response.setUserId(Long.parseLong(claims.getSubject()));
@@ -100,12 +158,67 @@ public class AuthController {
 
             return ResponseEntity.ok(response);
         } catch (JwtException e) {
-            // Invalid token
+            System.out.println("Token JWT inválido: " + e.getMessage());
+            String token = extractTokenFromRequest(request);
+            if (token != null) {
+                tokenService.invalidateToken(token);
+            }
+
             Map<String, Object> response = new HashMap<>();
             response.put("valid", false);
-            response.put("message", "Invalid or expired token");
-
+            response.put("message", "Token inválido");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        } catch (Exception e) {
+            System.out.println("Erro ao validar token: " + e.getMessage());
+            Map<String, Object> response = new HashMap<>();
+            response.put("valid", false);
+            response.put("message", "Erro ao validar token");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
+    }
+
+    /**
+     * Extrai o token do cabeçalho de autorização
+     */
+    private String extractTokenFromRequest(HttpServletRequest request) {
+        // Primeiro tenta extrair do cabeçalho Authorization
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            return authHeader.substring(7);
+        }
+
+        // Se não encontrou no cabeçalho, tenta extrair dos cookies
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("jwt_token".equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Verifica se o usuário existe buscando por diferentes campos
+     */
+    private Optional<User> verifyUser(String login) {
+        // Primeiro tenta encontrar por email
+        Optional<User> userOpt = userRepository.findByEmail(login);
+
+        if (userOpt.isPresent()) {
+            return userOpt;
+        }
+
+        // Se não encontrou por email, tenta por CPF/CNPJ
+        userOpt = userRepository.findByCpf_cnpj(login);
+
+        if (userOpt.isPresent()) {
+            return userOpt;
+        }
+
+        // Se não encontrou por CPF/CNPJ, tenta por username
+        return userRepository.findByUsername(login);
     }
 }

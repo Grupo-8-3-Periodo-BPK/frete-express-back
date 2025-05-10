@@ -1,5 +1,6 @@
 package br.com.express_frete.fretesexpress.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -7,9 +8,12 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import br.com.express_frete.fretesexpress.Validation.JwtFilter;
 
 import java.util.Arrays;
 
@@ -17,12 +21,16 @@ import java.util.Arrays;
 @EnableWebSecurity
 public class SecurityConfig {
 
+    @Autowired
+    private JwtFilter jwtFilter;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
                         // Permite acesso ao endpoint de login e validação de token
                         .requestMatchers("/api/auth/**").permitAll()
@@ -41,8 +49,7 @@ public class SecurityConfig {
         // Permitir apenas origens específicas ao invés de "*"
         configuration.setAllowedOrigins(Arrays.asList(
                 "http://localhost:3000", // Seu frontend em desenvolvimento
-                "http://localhost:5173", // Alternativa do Vite
-                "https://seu-dominio-producao.com" // Seu domínio em produção
+                "http://localhost:5173" // Alternativa do Vite
         ));
 
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));

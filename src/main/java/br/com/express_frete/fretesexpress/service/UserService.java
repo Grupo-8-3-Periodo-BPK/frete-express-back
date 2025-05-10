@@ -90,8 +90,7 @@ public class UserService {
                 if (Role.DRIVER.equals(updatedData.getRole())) {
                     user.setCnh(updatedData.getCnh());
 
-                    Set<ConstraintViolation<User>> violations = validator.validate(user,
-                            DriverValidation.class);
+                    Set<ConstraintViolation<User>> violations = validator.validate(user, DriverValidation.class);
                     if (!violations.isEmpty()) {
                         throw new ConstraintViolationException(violations);
                     }
@@ -107,20 +106,5 @@ public class UserService {
         }).orElse(null);
     }
 
-    /**
-     * Checks if user credentials are valid
-     * 
-     * @param email    user email
-     * @param password plain text password
-     * @return Optional with user if credentials are valid, empty otherwise
-     */
-    public Optional<User> authenticate(String email, String password) {
-        Optional<User> user = userRepository.findByEmail(email);
 
-        if (user.isPresent() && passwordEncoder.matches(password, user.get().getPassword())) {
-            return user;
-        }
-
-        return Optional.empty();
-    }
 }
