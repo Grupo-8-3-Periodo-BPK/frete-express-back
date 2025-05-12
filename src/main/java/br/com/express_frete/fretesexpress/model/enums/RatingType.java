@@ -1,7 +1,7 @@
 package br.com.express_frete.fretesexpress.model.enums;
 
 public enum RatingType {
-    BOM,
-    NEUTRO,
-    RUIM
+    GOOD,
+    NEUTRAL,
+    BAD
 }
