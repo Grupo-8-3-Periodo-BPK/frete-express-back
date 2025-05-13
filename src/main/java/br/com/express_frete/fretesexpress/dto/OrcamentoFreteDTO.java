@@ -1,6 +1,6 @@
 package br.com.express_frete.fretesexpress.dto;
 
-import br.com.express_frete.fretesexpress.model.enums.CategoriaVeiculo;
+import br.com.express_frete.fretesexpress.model.enums.VehicleCategory;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
@@ -46,7 +46,7 @@ public class OrcamentoFreteDTO {
     private String estadoDestino;
 
     @NotNull(message = "O tipo de veículo eh obrigatorio")
-    private CategoriaVeiculo tipoVeiculo;
+    private VehicleCategory category;
 
     private Double valorEstimado;
 }

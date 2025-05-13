@@ -2,7 +2,7 @@ package br.com.express_frete.fretesexpress.service;
 
 import br.com.express_frete.fretesexpress.dto.OrcamentoFreteDTO;
 import br.com.express_frete.fretesexpress.model.OrcamentoFrete;
-import br.com.express_frete.fretesexpress.model.enums.CategoriaVeiculo;
+import br.com.express_frete.fretesexpress.model.enums.VehicleCategory;
 import br.com.express_frete.fretesexpress.repository.OrcamentoFreteRepository;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
@@ -78,16 +78,16 @@ public class OrcamentoFreteService {
         double custoPorLitro = 6.00; // Fixo em R$6,00 por litro
 
         switch (orcamento.getTipoVeiculo()) {
-            case CAMINHAO:
+            case TRUCK:
                 consumoLitrosPorKm = 0.5;
                 break;
-            case CARRETA:
+            case TRAILER:
                 consumoLitrosPorKm = 0.7;
                 break;
             case VAN:
                 consumoLitrosPorKm = 0.2;
                 break;
-            case UTILITARIO:
+            case UTILITY:
                 consumoLitrosPorKm = 0.1;
                 break;
             default:
