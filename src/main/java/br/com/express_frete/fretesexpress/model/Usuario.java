@@ -1,0 +1,125 @@
+package br.com.express_frete.fretesexpress.model;
+
+import br.com.express_frete.fretesexpress.model.enums.Role;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Entity
+@Table(name = "usuarios")
+public class Usuario {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @NotBlank
+    private String nome;
+
+    @Email
+    @NotBlank
+    private String email;
+
+    @NotBlank
+    private String senha;
+
+    @Enumerated(EnumType.STRING)
+    private Role role;
+
+    private Integer totalAvaliacoesRecebidas = 0;
+    private Integer totalAvaliacoesFeitas = 0;
+
+    @OneToMany(mappedBy = "motorista")
+    @JsonIgnore
+    private List<Avaliacao> avaliacoesRecebidas;
+
+    @OneToMany(mappedBy = "cliente")
+    @JsonIgnore
+    private List<Avaliacao> avaliacoesFeitas;
+
+    @Column(nullable = false, columnDefinition = "INT DEFAULT 0")
+    private Integer tentativasLogin = 0; // Inicializado como 0
+
+    private LocalDateTime dataBloqueio;
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public String getNome() { return nome; }
+    public void setNome(String nome) { this.nome = nome; }
+
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+
+    public String getSenha() { return senha; }
+    public void setSenha(String senha) { this.senha = senha; }
+
+    public Role getRole() { return role; }
+    public void setRole(Role role) { this.role = role; }
+
+    @JsonIgnore
+    public List<Avaliacao> getAvaliacoesRecebidas() { return avaliacoesRecebidas; }
+    public void setAvaliacoesRecebidas(List<Avaliacao> avaliacoesRecebidas) { this.avaliacoesRecebidas = avaliacoesRecebidas; }
+
+    @JsonIgnore
+    public List<Avaliacao> getAvaliacoesFeitas() { return avaliacoesFeitas; }
+    public void setAvaliacoesFeitas(List<Avaliacao> avaliacoesFeitas) { this.avaliacoesFeitas = avaliacoesFeitas; }
+
+    public Integer getTotalAvaliacoesRecebidas() {
+        return totalAvaliacoesRecebidas;
+    }
+
+    public void setTotalAvaliacoesRecebidas(Integer totalAvaliacoesRecebidas) {
+        this.totalAvaliacoesRecebidas = totalAvaliacoesRecebidas;
+    }
+
+    public Integer getTotalAvaliacoesFeitas() {
+        return totalAvaliacoesFeitas;
+    }
+
+    public void setTotalAvaliacoesFeitas(Integer totalAvaliacoesFeitas) {
+        this.totalAvaliacoesFeitas = totalAvaliacoesFeitas;
+    }
+
+    public void incrementarAvaliacoesFeitas() {
+        this.totalAvaliacoesFeitas++;
+    }
+
+    public void incrementarAvaliacoesRecebidas() {
+        this.totalAvaliacoesRecebidas++;
+    }
+
+    public Integer getTentativasLogin() {
+        return tentativasLogin;
+    }
+
+    public void setTentativasLogin(Integer tentativasLogin) {
+        this.tentativasLogin = tentativasLogin;
+    }
+
+    public LocalDateTime getDataBloqueio() {
+        return dataBloqueio;
+    }
+
+    public void setDataBloqueio(LocalDateTime dataBloqueio) {
+        this.dataBloqueio = dataBloqueio;
+    }
+
+    public void incrementarTentativasLogin() {
+        this.tentativasLogin = (this.tentativasLogin == null ? 0 : this.tentativasLogin) + 1;
+    }
+
+    public void resetarTentativasLogin() {
+        this.tentativasLogin = 0;
+    }
+
+    public boolean isBloqueado() {
+        if (dataBloqueio == null) return false;
+        return dataBloqueio.plusMinutes(15).isAfter(LocalDateTime.now());
+    }
+
+    public void bloquear() {
+        this.dataBloqueio = LocalDateTime.now();
+    }
+}
