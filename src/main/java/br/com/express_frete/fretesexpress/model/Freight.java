@@ -45,6 +45,12 @@ public class Freight {
     @NotBlank
     private String destination_state;
 
+    @Column(name = "fuel_cost")
+    private Double fuelCost;
+
+    @Column(name = "include_fuel_cost")
+    private Boolean includeFuelCost;
+
     // Getters e Setters
 
     public Long getId() { return id; }
@@ -82,4 +88,20 @@ public class Freight {
 
     public String getDestination_state() { return destination_state; }
     public void setDestination_state(String destination_state) { this.destination_state = destination_state; }
+
+    public Double getFuelCost() {
+        return fuelCost;
+    }
+
+    public void setFuelCost(Double fuelCost) {
+        this.fuelCost = fuelCost;
+    }
+
+    public Boolean getIncludeFuelCost() {
+        return includeFuelCost;
+    }
+
+    public void setIncludeFuelCost(Boolean includeFuelCost) {
+        this.includeFuelCost = includeFuelCost;
+    }
 }
