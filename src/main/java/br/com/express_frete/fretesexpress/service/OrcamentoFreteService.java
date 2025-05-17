@@ -23,6 +23,9 @@ public class OrcamentoFreteService {
     @Autowired
     private ModelMapper modelMapper;
 
+    @Autowired
+    private RouteService routeService;
+
     public OrcamentoFreteDTO solicitarOrcamento(OrcamentoFreteDTO orcamentoDTO) {
         logger.info("Solicitando orçamento para carga: {}", orcamentoDTO.getTipoCarga());
 
@@ -104,18 +107,37 @@ public class OrcamentoFreteService {
     }
 
     private double calcularDistancia(String cidadeOrigem, String estadoOrigem, String cidadeDestino, String estadoDestino) {
-        logger.info("Simulando calculo de distância entre {} ({}) e {} ({})",
+        logger.info("Calculando distância real entre {} ({}) e {} ({})",
                 cidadeOrigem, estadoOrigem, cidadeDestino, estadoDestino);
 
-        // Simulaçao de distância
+        // Validação dos campos (mantida do código original)
         if (cidadeOrigem == null || estadoOrigem == null || cidadeDestino == null || estadoDestino == null) {
-            logger.error("Campos de origem ou destino estao nulos");
-            throw new IllegalArgumentException("Campos de origem ou destino estao ausentes");
+            logger.error("Campos de origem ou destino estão nulos");
+            throw new IllegalArgumentException("Campos de origem ou destino ausentes");
         }
 
-        if (cidadeOrigem.equalsIgnoreCase(cidadeDestino) && estadoOrigem.equalsIgnoreCase(estadoDestino)) {
-            return 10.0; // Mesma cidade
+        try {
+            // Formata os endereços no padrão "Cidade, Estado" para a API
+            String enderecoOrigem = String.format("%s, %s", cidadeOrigem, estadoOrigem);
+            String enderecoDestino = String.format("%s, %s", cidadeDestino, estadoDestino);
+
+            // Chama a API através do RouteService
+            String resultado = routeService.getDirections(enderecoOrigem, enderecoDestino);
+
+            // Processa o resultado (ex: "Distance: 150.50 KM")
+            String distanciaKmStr = resultado.replace("Distance: ", "").replace(" KM", "").trim();
+            double distanciaKm = Double.parseDouble(distanciaKmStr);
+
+            logger.info("Distância calculada: {} km", distanciaKm);
+            return distanciaKm;
+
+        } catch (Exception e) {
+            logger.error("Falha ao calcular distância via API: {}", e.getMessage());
+
+            logger.warn("Usando distância simulada como fallback");
+            if (cidadeOrigem.equalsIgnoreCase(cidadeDestino) && estadoOrigem.equalsIgnoreCase(estadoDestino)) {
+                return 10.0;
+            }
+            return estadoOrigem.equalsIgnoreCase(estadoDestino) ? 100.0 : 500.0;
         }
-        return estadoOrigem.equalsIgnoreCase(estadoDestino) ? 100.0 : 500.0; // Mesmo estado ou estados diferentes
     }
-}
