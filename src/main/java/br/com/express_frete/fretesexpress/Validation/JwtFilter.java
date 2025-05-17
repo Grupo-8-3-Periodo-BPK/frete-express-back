@@ -14,7 +14,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import br.com.express_frete.fretesexpress.model.User;
 import br.com.express_frete.fretesexpress.repository.UserRepository;
 import br.com.express_frete.fretesexpress.service.JwtService;
-import br.com.express_frete.fretesexpress.service.TokenService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
@@ -25,16 +24,13 @@ import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * Filtro para validação de tokens JWT.
- * Este filtro verifica se o token existe no banco de dados e é válido
- * antes de permitir o acesso aos endpoints protegidos.
+ * Este filtro verifica a validade do token JWT antes de permitir
+ * o acesso aos endpoints protegidos.
  */
 @Component
 public class JwtFilter extends OncePerRequestFilter {
     @Autowired
     private JwtService jwtService;
-
-    @Autowired
-    private TokenService tokenService;
 
     @Autowired
     private UserRepository userRepository;
@@ -48,10 +44,10 @@ public class JwtFilter extends OncePerRequestFilter {
             String token = extractTokenFromRequest(request);
 
             if (token != null) {
-                // Primeiro verifica se o token existe e é válido no banco de dados
-                if (tokenService.isTokenValid(token)) {
+                // Verificar se o token JWT é válido
+                if (jwtService.isTokenValid(token)) {
                     try {
-                        // Se o token é válido no banco, valida o JWT
+                        // Validar o JWT e extrair as claims
                         Claims claims = jwtService.validateToken(token);
 
                         // Extrair informações do usuário
@@ -71,13 +67,11 @@ public class JwtFilter extends OncePerRequestFilter {
                         }
                     } catch (JwtException e) {
                         System.out.println("Token JWT inválido: " + e.getMessage());
-                        // Invalidar token no banco de dados
-                        tokenService.invalidateToken(token);
                     } catch (Exception e) {
                         System.out.println("Erro ao processar token: " + e.getMessage());
                     }
                 } else {
-                    System.out.println("Token não encontrado ou inválido no banco de dados");
+                    System.out.println("Token JWT inválido");
                 }
             }
         } catch (Exception e) {

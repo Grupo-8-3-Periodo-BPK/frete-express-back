@@ -10,19 +10,21 @@ import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
-/**
- * Service for JWT token generation and validation
- */
 @Service
 public class JwtService {
 
-    // Token expiration time in milliseconds (24 hours)
     @Value("${jwt.expiration:86400000}")
     private long expirationTime;
 
@@ -31,41 +33,52 @@ public class JwtService {
     @PostConstruct
     public void init() {
         try {
-            // Try to read the JWT key from the .env file through the environment variable
-            secret = System.getenv("JWT_SECRET");
-
-            // If not found, use a default value for development
-            if (secret == null || secret.trim().isEmpty()) {
-                System.out.println(
-                        "[WARNING] JWT_SECRET variable not found in environment. Using default value for development.");
-                secret = "8fhg73h2g9b219g1b394hg1b37g19b3g173g17";
-            } else {
-                // Remove possible quotes and extra spaces from the value
-                secret = secret.trim().replaceAll("^[\"']|[\"']$", "");
+            // Tenta ler o JWT_SECRET do arquivo .env
+            File envFile = new File(".env");
+            if (envFile.exists()) {
+                Properties props = new Properties();
+                try (BufferedReader reader = new BufferedReader(new FileReader(envFile))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        if (line.startsWith("JWT_SECRET=")) {
+                            secret = line.substring("JWT_SECRET=".length());
+                            System.out.println("Chave JWT carregada do arquivo .env");
+                            break;
+                        }
+                    }
+                }
             }
+            // Se não encontrou no .env, tenta da variável de ambiente
+            if (secret == null || secret.trim().isEmpty()) {
+                secret = System.getenv("JWT_SECRET");
+            }
+
+            // Se ainda estiver nulo, usa o application-dev.properties (carregado
+            // automaticamente pelo Spring)
+            if (secret == null || secret.trim().isEmpty()) {
+                secret = "chaveMuitoSeguraParaDesenvolvimentoLocalNaoProduzirAssim";
+                System.out.println(
+                        "AVISO: Usando chave JWT padrão. Configure JWT_SECRET no arquivo .env ou como variável de ambiente para produção!");
+            }
+
+            // Remove possíveis aspas e espaços extras
+            secret = secret.trim().replaceAll("^[\"']|[\"']$", "");
         } catch (Exception e) {
-            System.out.println("[WARNING] Error accessing JWT_SECRET variable: " + e.getMessage());
-            System.out.println("[WARNING] Using default value for development.");
-            secret = "8fhg73h2g9b219g1b394hg1b37g19b3g173g17";
+            System.err.println("Erro ao acessar JWT_SECRET: " + e.getMessage());
+            throw new RuntimeException("Erro ao acessar JWT_SECRET: " + e.getMessage(), e);
         }
     }
 
-    /**
-     * Generates a JWT token based on user information
-     *
-     * @param user user for which the token will be generated
-     * @return JWT token
-     */
     public String generateToken(User user) {
-        if (user == null || user.getId() == null) {
-            throw new IllegalArgumentException("Usuário inválido para geração de token");
-        }
+        if (user == null || user.getId() == null)
+            throw new IllegalArgumentException("Invalid user for token generation");
 
         try {
             Map<String, Object> claims = new HashMap<>();
             claims.put("id", user.getId());
+            claims.put("name", user.getName());
             claims.put("email", user.getEmail());
-            claims.put("role", user.getRole() != null ? user.getRole().toString() : "USER");
+            claims.put("role", user.getRole() != null ? user.getRole().toString() : "Guest");
 
             return Jwts.builder()
                     .setClaims(claims)
@@ -75,21 +88,14 @@ public class JwtService {
                     .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                     .compact();
         } catch (Exception e) {
-            System.out.println("Erro ao gerar token: " + e.getMessage());
-            throw new RuntimeException("Erro ao gerar token JWT", e);
+            System.out.println("Error generating token: " + e.getMessage());
+            throw new RuntimeException("Error generating JWT token", e);
         }
     }
 
-    /**
-     * Validates a JWT token
-     *
-     * @param token token to be validated
-     * @return token claims if valid
-     * @throws JwtException if the token is invalid or expired
-     */
     public Claims validateToken(String token) throws JwtException {
         if (token == null || token.isEmpty()) {
-            throw new JwtException("Token vazio ou nulo");
+            throw new JwtException("Token empty or null");
         }
 
         try {
@@ -99,19 +105,41 @@ public class JwtService {
                     .parseClaimsJws(token)
                     .getBody();
         } catch (JwtException e) {
-            System.out.println("Erro na validação do token: " + e.getMessage());
+            System.out.println("Error in token validation: " + e.getMessage());
             throw e;
         } catch (Exception e) {
-            System.out.println("Erro inesperado na validação do token: " + e.getMessage());
-            throw new JwtException("Erro ao validar token: " + e.getMessage());
+            System.out.println("Unexpected error in token validation: " + e.getMessage());
+            throw new JwtException("Error validating token: " + e.getMessage());
         }
     }
 
     /**
-     * Gets the signing key based on the secret
-     *
-     * @return signing key
+     * Checks if a JWT token is valid without throwing an exception.
      */
+    public boolean isTokenValid(String token) {
+        if (token == null || token.isEmpty())
+            return false;
+        try {
+            validateToken(token);
+            return true;
+        } catch (JwtException e) {
+            return false;
+        }
+    }
+
+    public Long getUserIdFromToken(String token) {
+        try {
+            Claims claims = validateToken(token);
+            return Long.parseLong(claims.getSubject());
+        } catch (JwtException e) {
+            return null;
+        }
+    }
+
+    public Instant getExpirationTime() {
+        return Instant.now().plus(24, ChronoUnit.HOURS);
+    }
+
     private Key getSigningKey() {
         byte[] keyBytes = secret.getBytes(StandardCharsets.UTF_8);
         return Keys.hmacShaKeyFor(keyBytes);

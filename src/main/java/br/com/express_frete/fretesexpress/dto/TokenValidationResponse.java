@@ -13,7 +13,7 @@ public class TokenValidationResponse {
 
     @JsonProperty("user_id")
     private Long userId;
-
+    private String name;
     private String email;
     private String role;
 }

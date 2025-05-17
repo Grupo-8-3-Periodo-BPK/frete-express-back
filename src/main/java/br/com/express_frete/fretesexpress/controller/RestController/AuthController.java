@@ -3,11 +3,9 @@ package br.com.express_frete.fretesexpress.controller.RestController;
 import br.com.express_frete.fretesexpress.dto.AuthRequest;
 import br.com.express_frete.fretesexpress.dto.AuthResponse;
 import br.com.express_frete.fretesexpress.dto.TokenValidationResponse;
-import br.com.express_frete.fretesexpress.model.Token;
 import br.com.express_frete.fretesexpress.model.User;
 import br.com.express_frete.fretesexpress.repository.UserRepository;
 import br.com.express_frete.fretesexpress.service.JwtService;
-import br.com.express_frete.fretesexpress.service.TokenService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.http.Cookie;
@@ -20,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -34,15 +33,12 @@ public class AuthController {
     @Autowired
     private JwtService jwtService;
 
-    @Autowired
-    private TokenService tokenService;
-
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody @Valid AuthRequest authRequest, HttpServletResponse response) {
         try {
-            // Verificar se o usuário existe
+            // Verify if the user exists
             Optional<User> userOpt = verifyUser(authRequest.getLogin());
             if (userOpt.isEmpty()) {
                 Map<String, String> error = new HashMap<>();
@@ -50,38 +46,40 @@ public class AuthController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
             }
             User user = userOpt.get();
-            // Verificar se a senha está correta
+            // Verify if the password is correct
             if (!passwordEncoder.matches(authRequest.getPassword(), user.getPassword())) {
                 Map<String, String> error = new HashMap<>();
                 error.put("message", "Invalid credentials");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
             }
 
-            // Criar token e salvá-lo no banco
-            Token token = tokenService.createToken(user);
+            // Gerar o token JWT
+            String token = jwtService.generateToken(user);
 
-            // Configurar o cookie seguro
-            Cookie jwtCookie = new Cookie("jwt_token", token.getToken());
-            jwtCookie.setHttpOnly(true); // Impede acesso via JavaScript
-            jwtCookie.setSecure(true); // Envia apenas em HTTPS
-            jwtCookie.setPath("/"); // Disponível em todo o site
-            jwtCookie.setMaxAge(24 * 60 * 60); // Duração de 24 horas em segundos
+            // Calcular data de expiração (24 horas)
+            Instant expiration = jwtService.getExpirationTime();
+
+            // Configure the secure cookie
+            Cookie jwtCookie = new Cookie("jwt_token", token);
+            jwtCookie.setHttpOnly(true); // Prevent access via JavaScript
+            jwtCookie.setSecure(true); // Send only over HTTPS
+            jwtCookie.setPath("/"); // Available on the entire site
+            jwtCookie.setMaxAge(24 * 60 * 60); // Duration of 24 hours in seconds
             response.addCookie(jwtCookie);
 
-            // Criar resposta sem incluir o token
+            // Create response without including the token
             AuthResponse authResponse = new AuthResponse();
             authResponse.setId(user.getId());
             authResponse.setName(user.getName());
             authResponse.setEmail(user.getEmail());
             authResponse.setRole(user.getRole());
-            authResponse.setExpiration(token.getExpiration());
-            
+            authResponse.setExpiration(expiration);
 
             return ResponseEntity.ok(authResponse);
         } catch (Exception e) {
-            System.out.println("Erro no login: " + e.getMessage());
+            System.out.println("Error in login: " + e.getMessage());
             Map<String, String> error = new HashMap<>();
-            error.put("message", "Erro interno no servidor");
+            error.put("message", "Internal server error");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
@@ -89,28 +87,20 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
         try {
-            String token = extractTokenFromRequest(request);
-            if (token != null) {
-                tokenService.invalidateToken(token);
-                System.out.println("Token invalidado com sucesso");
-            } else {
-                System.out.println("Tentativa de logout sem token");
-            }
-
-            // Remover o cookie
+            // Remove the cookie
             Cookie cookie = new Cookie("jwt_token", null);
             cookie.setHttpOnly(true);
             cookie.setPath("/");
-            cookie.setMaxAge(0); // Remove o cookie
+            cookie.setMaxAge(0); // Remove the cookie
             response.addCookie(cookie);
 
             Map<String, String> responseMap = new HashMap<>();
             responseMap.put("message", "Logout successful");
             return ResponseEntity.ok(responseMap);
         } catch (Exception e) {
-            System.out.println("Erro no logout: " + e.getMessage());
+            System.out.println("Error in logout: " + e.getMessage());
             Map<String, String> error = new HashMap<>();
-            error.put("message", "Erro ao realizar logout");
+            error.put("message", "Error performing logout");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
@@ -118,9 +108,9 @@ public class AuthController {
     @PostMapping("/validate-token")
     public ResponseEntity<?> validateToken(HttpServletRequest request) {
         try {
-            String token = extractTokenFromRequest(request);
+            String token = extractToken(request);
             if (token == null) {
-                // Tentar extrair de cookies
+                // Try to extract from cookies
                 Cookie[] cookies = request.getCookies();
                 if (cookies != null) {
                     for (Cookie cookie : cookies) {
@@ -134,60 +124,47 @@ public class AuthController {
                 if (token == null) {
                     Map<String, Object> response = new HashMap<>();
                     response.put("valid", false);
-                    response.put("message", "Token não fornecido ou formato inválido");
+                    response.put("message", "Token not provided or invalid format");
                     return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
                 }
             }
 
-            // Verificar se o token existe e é válido no banco
-            if (!tokenService.isTokenValid(token)) {
+            // Verify if the JWT token is valid
+            if (!jwtService.isTokenValid(token)) {
                 Map<String, Object> response = new HashMap<>();
                 response.put("valid", false);
-                response.put("message", "Token inválido ou expirado");
+                response.put("message", "Invalid or expired token");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
             }
 
-            // Validar o token JWT
+            // Validate the JWT token
             Claims claims = jwtService.validateToken(token);
 
             TokenValidationResponse response = new TokenValidationResponse();
             response.setValid(true);
             response.setUserId(Long.parseLong(claims.getSubject()));
+            response.setName(claims.get("name", String.class));
             response.setEmail(claims.get("email", String.class));
             response.setRole(claims.get("role", String.class));
 
             return ResponseEntity.ok(response);
         } catch (JwtException e) {
-            System.out.println("Token JWT inválido: " + e.getMessage());
-            String token = extractTokenFromRequest(request);
-            if (token != null) {
-                tokenService.invalidateToken(token);
-            }
+            System.out.println("Invalid JWT token: " + e.getMessage());
 
             Map<String, Object> response = new HashMap<>();
             response.put("valid", false);
-            response.put("message", "Token inválido");
+            response.put("message", "Invalid token");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         } catch (Exception e) {
-            System.out.println("Erro ao validar token: " + e.getMessage());
+            System.out.println("Error validating token: " + e.getMessage());
             Map<String, Object> response = new HashMap<>();
             response.put("valid", false);
-            response.put("message", "Erro ao validar token");
+            response.put("message", "Error validating token");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
 
-    /**
-     * Extrai o token do cabeçalho de autorização
-     */
-    private String extractTokenFromRequest(HttpServletRequest request) {
-        // Primeiro tenta extrair do cabeçalho Authorization
-        String authHeader = request.getHeader("Authorization");
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            return authHeader.substring(7);
-        }
-
-        // Se não encontrou no cabeçalho, tenta extrair dos cookies
+    private String extractToken(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
             for (Cookie cookie : cookies) {
@@ -196,29 +173,21 @@ public class AuthController {
                 }
             }
         }
-
         return null;
     }
 
-    /**
-     * Verifica se o usuário existe buscando por diferentes campos
-     */
     private Optional<User> verifyUser(String login) {
-        // Primeiro tenta encontrar por email
+        // Try to find the user by email
         Optional<User> userOpt = userRepository.findByEmail(login);
-
-        if (userOpt.isPresent()) {
+        if (userOpt.isPresent())
             return userOpt;
-        }
 
-        // Se não encontrou por email, tenta por CPF/CNPJ
+        // Try to find the user by CPF/CNPJ
         userOpt = userRepository.findByCpf_cnpj(login);
-
-        if (userOpt.isPresent()) {
+        if (userOpt.isPresent())
             return userOpt;
-        }
 
-        // Se não encontrou por CPF/CNPJ, tenta por username
+        // Try to find the user by username
         return userRepository.findByUsername(login);
     }
 }
