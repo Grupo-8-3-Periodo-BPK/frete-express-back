@@ -40,10 +40,22 @@ public class JwtFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         try {
+            String requestUri = request.getRequestURI();
+
+            // Não verificar token para endpoints públicos
+            if (requestUri.startsWith("/api/auth/") ||
+                    requestUri.startsWith("/swagger-ui/") ||
+                    requestUri.startsWith("/v3/api-docs/")) {
+
+                filterChain.doFilter(request, response);
+                return;
+            }
+
             // Extrair token do cabeçalho de autorização ou cookies
             String token = extractTokenFromRequest(request);
 
             if (token != null) {
+
                 // Verificar se o token JWT é válido
                 if (jwtService.isTokenValid(token)) {
                     try {
@@ -64,22 +76,35 @@ public class JwtFilter extends OncePerRequestFilter {
 
                             SecurityContextHolder.getContext().setAuthentication(authentication);
                             System.out.println("Usuário autenticado: " + email + " com função: " + role);
+
+                            // Continuar a cadeia de filtros
+                            filterChain.doFilter(request, response);
+                            return;
+                        } else {
+                            handleAuthenticationFailure(response, "Usuário não encontrado");
+                            return;
                         }
                     } catch (JwtException e) {
-                        System.out.println("Token JWT inválido: " + e.getMessage());
+                        handleAuthenticationFailure(response, "Token inválido: " + e.getMessage());
+                        return;
                     } catch (Exception e) {
-                        System.out.println("Erro ao processar token: " + e.getMessage());
+                        handleAuthenticationFailure(response, "Erro ao processar token: " + e.getMessage());
+                        return;
                     }
                 } else {
-                    System.out.println("Token JWT inválido");
+                    handleAuthenticationFailure(response, "Token expirado ou inválido");
+                    return;
                 }
+            } else {
+                handleAuthenticationFailure(response, "Token de autenticação não encontrado");
+                return;
             }
         } catch (Exception e) {
             // Garantir que o filtro não quebre a cadeia de filtros
             System.out.println("Erro no filtro JWT: " + e.getMessage());
         }
 
-        // Sempre continuar a cadeia de filtros
+        // Sempre continuar a cadeia de filtros se chegar até aqui (por precaução)
         filterChain.doFilter(request, response);
     }
 
@@ -90,7 +115,9 @@ public class JwtFilter extends OncePerRequestFilter {
         // Primeiro tenta extrair do cabeçalho Authorization
         String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            return authHeader.substring(7);
+            String token = authHeader.substring(7);
+            System.out.println("Token extraído do cabeçalho Authorization");
+            return token;
         }
 
         // Se não encontrou no cabeçalho, tenta extrair dos cookies
@@ -98,11 +125,30 @@ public class JwtFilter extends OncePerRequestFilter {
         if (cookies != null) {
             for (Cookie cookie : cookies) {
                 if ("jwt_token".equals(cookie.getName())) {
+                    System.out.println("Token extraído do cookie jwt_token");
                     return cookie.getValue();
                 }
             }
+
+            // Imprimir todos os cookies disponíveis para debug
+            System.out.println("Cookies disponíveis: ");
+            for (Cookie cookie : cookies) {
+                System.out.println("  - " + cookie.getName() + ": "
+                        + cookie.getValue().substring(0, Math.min(10, cookie.getValue().length())) + "...");
+            }
+        } else {
+            System.out.println("Nenhum cookie encontrado no request");
         }
 
         return null;
+    }
+
+    /**
+     * Método para lidar com falhas de autenticação de maneira padronizada
+     */
+    private void handleAuthenticationFailure(HttpServletResponse response, String message) throws IOException {
+        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+        response.setContentType("application/json;charset=UTF-8");
+        response.getWriter().write("{\"message\": \"" + message + "\"}");
     }
 }

@@ -7,9 +7,18 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
+import br.com.express_frete.fretesexpress.model.Contract;
+import br.com.express_frete.fretesexpress.model.Freight;
+import br.com.express_frete.fretesexpress.model.Tracking;
 import br.com.express_frete.fretesexpress.model.User;
 import br.com.express_frete.fretesexpress.model.enums.Role;
+import br.com.express_frete.fretesexpress.model.enums.TrackingStatus;
+import br.com.express_frete.fretesexpress.repository.ContractRepository;
+import br.com.express_frete.fretesexpress.repository.FreightRepository;
+import br.com.express_frete.fretesexpress.repository.TrackingRepository;
 import br.com.express_frete.fretesexpress.repository.UserRepository;
+
+import java.time.LocalDate;
 
 @SpringBootApplication
 @EnableJpaRepositories("br.com.express_frete.fretesexpress.repository")
@@ -21,6 +30,9 @@ public class FretesexpressApplication {
 
 	@Bean
 	public CommandLineRunner initDatabase(UserRepository userRepository,
+			FreightRepository freightRepository,
+			ContractRepository contractRepository,
+			TrackingRepository trackingRepository,
 			BCryptPasswordEncoder encoder) {
 		return args -> {
 			if (userRepository.count() == 0) {
@@ -59,6 +71,78 @@ public class FretesexpressApplication {
 				client.setCpfCnpj("45678912301");
 				client.setPhone("(11) 77777-7777");
 				client = userRepository.save(client);
+
+				// Criar exemplo de frete
+				Freight freight = new Freight();
+				freight.setName("Frete de Móveis");
+				freight.setWeight(150.0);
+				freight.setHeight(1.2);
+				freight.setLength(2.5);
+				freight.setWidth(1.0);
+				freight.setInitial_date(LocalDate.now());
+				freight.setFinal_date(LocalDate.now().plusDays(7));
+				freight.setOrigin_city("São Paulo");
+				freight.setOrigin_state("SP");
+				freight.setDestination_city("Rio de Janeiro");
+				freight.setDestination_state("RJ");
+				freight = freightRepository.save(freight);
+
+				// Criar um segundo exemplo de frete
+				Freight freight2 = new Freight();
+				freight2.setName("Entrega de Eletrônicos");
+				freight2.setWeight(80.0);
+				freight2.setHeight(0.8);
+				freight2.setLength(1.5);
+				freight2.setWidth(0.6);
+				freight2.setInitial_date(LocalDate.now().plusDays(1));
+				freight2.setFinal_date(LocalDate.now().plusDays(5));
+				freight2.setOrigin_city("Curitiba");
+				freight2.setOrigin_state("PR");
+				freight2.setDestination_city("Florianópolis");
+				freight2.setDestination_state("SC");
+				freight2 = freightRepository.save(freight2);
+
+				// Criar contrato exemplo
+				Contract contract = new Contract();
+				contract.setName("Contrato de Transporte de Móveis");
+				contract.setClient(client);
+				contract.setDriver(driver);
+				contract.setFreight(freight);
+				contract.setDriverAccepted(true);
+				contract.setClientAccepted(true);
+				contract.setUser(admin);
+				contract = contractRepository.save(contract);
+
+				// Criar outro contrato exemplo (pendente de aceitação)
+				Contract contract2 = new Contract();
+				contract2.setName("Contrato de Entrega de Eletrônicos");
+				contract2.setClient(client);
+				contract2.setDriver(driver);
+				contract2.setFreight(freight2);
+				contract2.setDriverAccepted(true);
+				contract2.setClientAccepted(false);
+				contract2.setUser(admin);
+				contract2 = contractRepository.save(contract2);
+
+				// Criar tracking para o primeiro contrato
+				Tracking tracking1 = new Tracking();
+				tracking1.setFreight(freight);
+				tracking1.setContract(contract);
+				tracking1.setStatus(TrackingStatus.WAITING_PICKUP);
+				tracking1.setCurrentLocation("São Paulo, SP - Depósito Central");
+				tracking1.setUpdateDate(LocalDate.now().minusDays(1));
+				tracking1.setContractUser(admin);
+				trackingRepository.save(tracking1);
+
+				// Criar outro tracking para o mesmo contrato (atualizando status)
+				Tracking tracking2 = new Tracking();
+				tracking2.setFreight(freight);
+				tracking2.setContract(contract);
+				tracking2.setStatus(TrackingStatus.IN_TRANSIT);
+				tracking2.setCurrentLocation("Rodovia Dutra, KM 200");
+				tracking2.setUpdateDate(LocalDate.now());
+				tracking2.setContractUser(driver);
+				trackingRepository.save(tracking2);
 
 				System.out.println("Dados inicializados com sucesso!");
 			} else {

@@ -59,13 +59,19 @@ public class AuthController {
             // Calcular data de expiração (24 horas)
             Instant expiration = jwtService.getExpirationTime();
 
-            // Configure the secure cookie
+            // Configurar cookie para desenvolvimento local
             Cookie jwtCookie = new Cookie("jwt_token", token);
-            jwtCookie.setHttpOnly(true); // Prevent access via JavaScript
-            jwtCookie.setSecure(true); // Send only over HTTPS
-            jwtCookie.setPath("/"); // Available on the entire site
-            jwtCookie.setMaxAge(24 * 60 * 60); // Duration of 24 hours in seconds
+            jwtCookie.setHttpOnly(true);
+            jwtCookie.setSecure(false); // false para HTTP local
+            jwtCookie.setPath("/");
+            jwtCookie.setMaxAge(24 * 60 * 60); // 24 horas
+
+            // Adicionar cookie à resposta
             response.addCookie(jwtCookie);
+
+            // Log para debug
+            System.out.println(
+                    "Cookie JWT configurado: " + jwtCookie.getName() + "=" + token.substring(0, 20) + "... (truncado)");
 
             // Create response without including the token
             AuthResponse authResponse = new AuthResponse();
@@ -90,6 +96,7 @@ public class AuthController {
             // Remove the cookie
             Cookie cookie = new Cookie("jwt_token", null);
             cookie.setHttpOnly(true);
+            cookie.setSecure(false); // Mesma configuração do login
             cookie.setPath("/");
             cookie.setMaxAge(0); // Remove the cookie
             response.addCookie(cookie);

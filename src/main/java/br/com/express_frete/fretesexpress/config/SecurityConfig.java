@@ -31,7 +31,6 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
                         // Permite acesso ao endpoint de login e validação de token
                         .requestMatchers("/api/auth/**").permitAll()
@@ -39,14 +38,14 @@ public class SecurityConfig {
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         // Demais endpoints exigem autenticação
                         .anyRequest().authenticated())
-                        .exceptionHandling(exception -> exception
+                .exceptionHandling(exception -> exception
                         .authenticationEntryPoint((request, response, authException) -> {
-                            response.setContentType("text/plain;charset=UTF-8");
+                            response.setContentType("application/json;charset=UTF-8");
                             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                            response.getWriter().write("Unauthorized");
-                        })
-                        )
-                        .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+                            response.getWriter().write("{\"message\": \"Acesso não autorizado. Erro: "
+                                    + authException.getMessage() + "\"}");
+                        }))
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class); // Adicionar só uma vez
         return http.build();
     }
 
@@ -57,7 +56,9 @@ public class SecurityConfig {
         // Permitir apenas origens específicas ao invés de "*"
         configuration.setAllowedOrigins(Arrays.asList(
                 "http://localhost:3000", // Seu frontend em desenvolvimento
-                "http://localhost:5173" // Alternativa do Vite
+                "http://localhost:5173", // Alternativa do Vite
+                "http://localhost:8080", // Porta 8080
+                "http://localhost:8000" // Porta 8000
         ));
 
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));

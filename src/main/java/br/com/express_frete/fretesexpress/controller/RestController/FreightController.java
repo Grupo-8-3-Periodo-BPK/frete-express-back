@@ -2,8 +2,13 @@ package br.com.express_frete.fretesexpress.controller.RestController;
 
 import br.com.express_frete.fretesexpress.model.Freight;
 import br.com.express_frete.fretesexpress.repository.FreightRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,8 +26,15 @@ public class FreightController {
     }
 
     @PostMapping
-    public Freight cadastrar(@RequestBody @Valid Freight freight) {
-        return repository.save(freight);
+    public ResponseEntity<?> cadastrar(@RequestBody @Valid Freight freight, HttpServletRequest request) {
+        // Verificar a autenticação atual para logs
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        System.out.println("Criando frete: " + freight.getName() + " - Usuário: " + (auth != null ? auth.getName() : "Não autenticado"));
+        
+        // Salvar o frete
+        Freight savedFreight = repository.save(freight);
+        
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedFreight);
     }
 
     @GetMapping("/{id}")
