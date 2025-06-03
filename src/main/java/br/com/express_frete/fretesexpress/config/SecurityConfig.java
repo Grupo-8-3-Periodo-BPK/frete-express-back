@@ -34,6 +34,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Permite acesso ao endpoint de login e validação de token
                         .requestMatchers("/api/auth/**").permitAll()
+
+                        .requestMatchers("/api/recovery/**").permitAll()
+
                         // Swagger/OpenAPI endpoints
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         // Demais endpoints exigem autenticação

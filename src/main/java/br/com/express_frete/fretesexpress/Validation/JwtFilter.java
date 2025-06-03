@@ -44,6 +44,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
             // Não verificar token para endpoints públicos
             if (requestUri.startsWith("/api/auth/") ||
+                    requestUri.startsWith("/api/recovery/") ||
                     requestUri.startsWith("/swagger-ui/") ||
                     requestUri.startsWith("/v3/api-docs/")) {
 
