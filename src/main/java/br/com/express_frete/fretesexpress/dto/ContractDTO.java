@@ -1,30 +1,37 @@
 package br.com.express_frete.fretesexpress.dto;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import java.time.LocalDate;
 
 public class ContractDTO {
     private Long id;
 
-    @NotBlank(message = "O nome do contrato é obrigatório")
-    @Size(max = 45, message = "O nome deve ter no máximo 45 caracteres")
-    private String name;
-
     @NotNull(message = "O cliente é obrigatório")
-    private Long clientId;
+    private Long client_id;
 
     @NotNull(message = "O motorista é obrigatório")
-    private Long driverId;
+    private Long driver_id;
 
     @NotNull(message = "O frete é obrigatório")
-    private Long freightId;
+    private Long freight_id;
 
-    private Boolean driverAccepted = false;
+    @NotNull(message = "O veículo é obrigatório")
+    private Long vehicle_id;
 
-    private Boolean clientAccepted = false;
+    @NotNull(message = "A data de coleta é obrigatória")
+    private LocalDate pickup_date;
 
-    private Long userId;
+    @NotNull(message = "A data de entrega é obrigatória")
+    private LocalDate delivery_date;
+
+    @NotNull(message = "O valor acordado é obrigatório")
+    private Double agreed_value;
+
+    private Boolean driver_accepted = true;
+
+    private Boolean client_accepted = false;
+
+    private String display_name;
 
     // Getters and Setters
     public Long getId() {
@@ -35,59 +42,83 @@ public class ContractDTO {
         this.id = id;
     }
 
-    public String getName() {
-        return name;
+    public Long getClient_id() {
+        return client_id;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setClient_id(Long client_id) {
+        this.client_id = client_id;
     }
 
-    public Long getClientId() {
-        return clientId;
+    public Long getDriver_id() {
+        return driver_id;
     }
 
-    public void setClientId(Long clientId) {
-        this.clientId = clientId;
+    public void setDriver_id(Long driver_id) {
+        this.driver_id = driver_id;
     }
 
-    public Long getDriverId() {
-        return driverId;
+    public Long getFreight_id() {
+        return freight_id;
     }
 
-    public void setDriverId(Long driverId) {
-        this.driverId = driverId;
+    public void setFreight_id(Long freight_id) {
+        this.freight_id = freight_id;
     }
 
-    public Long getFreightId() {
-        return freightId;
+    public Long getVehicle_id() {
+        return vehicle_id;
     }
 
-    public void setFreightId(Long freightId) {
-        this.freightId = freightId;
+    public void setVehicle_id(Long vehicle_id) {
+        this.vehicle_id = vehicle_id;
     }
 
-    public Boolean getDriverAccepted() {
-        return driverAccepted;
+    public LocalDate getPickup_date() {
+        return pickup_date;
     }
 
-    public void setDriverAccepted(Boolean driverAccepted) {
-        this.driverAccepted = driverAccepted;
+    public void setPickup_date(LocalDate pickup_date) {
+        this.pickup_date = pickup_date;
     }
 
-    public Boolean getClientAccepted() {
-        return clientAccepted;
+    public LocalDate getDelivery_date() {
+        return delivery_date;
     }
 
-    public void setClientAccepted(Boolean clientAccepted) {
-        this.clientAccepted = clientAccepted;
+    public void setDelivery_date(LocalDate delivery_date) {
+        this.delivery_date = delivery_date;
     }
 
-    public Long getUserId() {
-        return userId;
+    public Double getAgreed_value() {
+        return agreed_value;
     }
 
-    public void setUserId(Long userId) {
-        this.userId = userId;
+    public void setAgreed_value(Double agreed_value) {
+        this.agreed_value = agreed_value;
+    }
+
+    public Boolean getDriver_accepted() {
+        return driver_accepted;
+    }
+
+    public void setDriver_accepted(Boolean driver_accepted) {
+        this.driver_accepted = driver_accepted;
+    }
+
+    public Boolean getClient_accepted() {
+        return client_accepted;
+    }
+
+    public void setClient_accepted(Boolean client_accepted) {
+        this.client_accepted = client_accepted;
+    }
+
+    public String getDisplay_name() {
+        return display_name;
+    }
+
+    public void setDisplay_name(String display_name) {
+        this.display_name = display_name;
     }
 }

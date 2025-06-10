@@ -4,8 +4,6 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
-import java.time.LocalDateTime;
-
 @Data
 @Entity
 @Table(name = "form")
@@ -33,8 +31,4 @@ public class Form {
     @NotBlank(message = "The problem description is required")
     @Column(name = "problem_description")
     private String problemDescription;
-
-    @NotNull(message = "The sending date is required")
-    @Column(name = "sending_date")
-    private LocalDateTime sendingDate;
 }

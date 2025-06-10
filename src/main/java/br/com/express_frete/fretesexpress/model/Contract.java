@@ -2,6 +2,8 @@ package br.com.express_frete.fretesexpress.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 @Entity
 @Table(name = "contract")
@@ -10,10 +12,6 @@ public class Contract {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @NotBlank
-    @Size(max = 45)
-    private String name;
 
     @ManyToOne
     @JoinColumn(name = "client_id", nullable = false)
@@ -27,15 +25,42 @@ public class Contract {
     @JoinColumn(name = "freight_id", nullable = false)
     private Freight freight;
 
+    @ManyToOne
+    @JoinColumn(name = "vehicle_id", nullable = false)
+    private Vehicle vehicle;
+
+    @NotNull
+    @Column(name = "pickup_date")
+    private LocalDate pickupDate;
+
+    @NotNull
+    @Column(name = "delivery_date")
+    private LocalDate deliveryDate;
+
+    @NotNull
+    @Column(name = "agreed_value")
+    private Double agreedValue;
+
     @Column(name = "driver_accepted")
     private Boolean driverAccepted = false;
 
     @Column(name = "client_accepted")
     private Boolean clientAccepted = false;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user;
+    // Método para gerar nome descritivo do contrato
+    @Transient
+    public String getDisplayName() {
+        if (freight == null)
+            return "Novo Contrato";
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        String pickupDateStr = pickupDate != null ? pickupDate.format(formatter) : "Data não definida";
+
+        return String.format("Frete: %s → %s (%s)",
+                freight.getOrigin_city(),
+                freight.getDestination_city(),
+                pickupDateStr);
+    }
 
     // Getters and Setters
     public Long getId() {
@@ -44,14 +69,6 @@ public class Contract {
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
     }
 
     public User getClient() {
@@ -78,6 +95,38 @@ public class Contract {
         this.freight = freight;
     }
 
+    public Vehicle getVehicle() {
+        return vehicle;
+    }
+
+    public void setVehicle(Vehicle vehicle) {
+        this.vehicle = vehicle;
+    }
+
+    public LocalDate getPickupDate() {
+        return pickupDate;
+    }
+
+    public void setPickupDate(LocalDate pickupDate) {
+        this.pickupDate = pickupDate;
+    }
+
+    public LocalDate getDeliveryDate() {
+        return deliveryDate;
+    }
+
+    public void setDeliveryDate(LocalDate deliveryDate) {
+        this.deliveryDate = deliveryDate;
+    }
+
+    public Double getAgreedValue() {
+        return agreedValue;
+    }
+
+    public void setAgreedValue(Double agreedValue) {
+        this.agreedValue = agreedValue;
+    }
+
     public Boolean getDriverAccepted() {
         return driverAccepted;
     }
@@ -93,12 +142,4 @@ public class Contract {
     public void setClientAccepted(Boolean clientAccepted) {
         this.clientAccepted = clientAccepted;
     }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
-} 
+}

@@ -32,11 +32,8 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // Permite acesso ao endpoint de login e validação de token
                         .requestMatchers("/api/auth/**").permitAll()
-                        // Swagger/OpenAPI endpoints
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                        // Demais endpoints exigem autenticação
                         .anyRequest().authenticated())
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint((request, response, authException) -> {
@@ -45,7 +42,7 @@ public class SecurityConfig {
                             response.getWriter().write("{\"message\": \"Acesso não autorizado. Erro: "
                                     + authException.getMessage() + "\"}");
                         }))
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class); // Adicionar só uma vez
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 
@@ -53,12 +50,11 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Permitir apenas origens específicas ao invés de "*"
         configuration.setAllowedOrigins(Arrays.asList(
-                "http://localhost:3000", // Seu frontend em desenvolvimento
-                "http://localhost:5173", // Alternativa do Vite
-                "http://localhost:8080", // Porta 8080
-                "http://localhost:8000" // Porta 8000
+                "http://localhost:3000",
+                "http://localhost:5173",
+                "http://localhost:8080",
+                "http://localhost:8000"
         ));
 
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));

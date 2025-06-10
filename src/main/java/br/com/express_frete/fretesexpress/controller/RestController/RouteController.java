@@ -1,4 +1,4 @@
-package br.com.express_frete.fretesexpress.controller;
+package br.com.express_frete.fretesexpress.controller.RestController;
 import br.com.express_frete.fretesexpress.service.RouteService;
 import org.springframework.web.bind.annotation.*;
 

@@ -5,6 +5,7 @@ import br.com.express_frete.fretesexpress.repository.FreightRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -29,11 +30,11 @@ public class FreightController {
     public ResponseEntity<?> cadastrar(@RequestBody @Valid Freight freight, HttpServletRequest request) {
         // Verificar a autenticação atual para logs
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        System.out.println("Criando frete: " + freight.getName() + " - Usuário: " + (auth != null ? auth.getName() : "Não autenticado"));
-        
-        // Salvar o frete
+        System.out.println("Criando frete: " + freight.getName() + " - Usuário: "
+                + (auth != null ? auth.getName() : "Não autenticado"));
+
         Freight savedFreight = repository.save(freight);
-        
+
         return ResponseEntity.status(HttpStatus.CREATED).body(savedFreight);
     }
 
@@ -61,7 +62,13 @@ public class FreightController {
     }
 
     @DeleteMapping("/{id}")
-    public void deletar(@PathVariable Long id) {
-        repository.deleteById(id);
+    public ResponseEntity<String> deletar(@PathVariable Long id) {
+        try {
+            repository.deleteById(id);
+            return ResponseEntity.ok("Frete deletado com sucesso.");
+        } catch (DataIntegrityViolationException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body("Não é possível excluir este frete pois ele está associado a um contrato existente.");
+        }
     }
 }

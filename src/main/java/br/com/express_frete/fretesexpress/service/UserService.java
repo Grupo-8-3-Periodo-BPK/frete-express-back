@@ -9,6 +9,8 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Validator;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -31,8 +33,18 @@ public class UserService {
         return userRepository.findAll();
     }
 
+    // Método para buscar todos os usuários com paginação
+    public Page<User> findAllPaged(Pageable pageable) {
+        return userRepository.findAll(pageable);
+    }
+
     public List<User> findByRole(Role role) {
         return userRepository.findByRole(role);
+    }
+
+    // Método para buscar usuários por papel com paginação
+    public Page<User> findByRolePaged(Role role, Pageable pageable) {
+        return userRepository.findByRole(role, pageable);
     }
 
     public User findById(Long id) {
@@ -101,10 +113,14 @@ public class UserService {
             if (updatedData.getCpfCnpj() != null) {
                 user.setCpfCnpj(updatedData.getCpfCnpj());
             }
+            // Add phone update
+            if (updatedData.getPhone() != null) {
+                user.setPhone(updatedData.getPhone());
+            }
 
+            // Explicitly return the saved user
             return userRepository.save(user);
-        }).orElse(null);
+        }).orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + id));
     }
-
 
 }

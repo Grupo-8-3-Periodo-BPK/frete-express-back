@@ -1,4 +1,4 @@
-package br.com.express_frete.fretesexpress.controller;
+package br.com.express_frete.fretesexpress.controller.RestController;
 
 import br.com.express_frete.fretesexpress.dto.ContractDTO;
 import br.com.express_frete.fretesexpress.model.Contract;
@@ -59,5 +59,21 @@ public class ContractController {
     @GetMapping("/freight/{freightId}")
     public ResponseEntity<List<Contract>> getContractsByFreight(@PathVariable Long freightId) {
         return ResponseEntity.ok(contractService.findByFreight(freightId));
+    }
+
+    @PatchMapping("/{id}/driver-acceptance")
+    public ResponseEntity<Contract> setDriverAcceptance(
+            @PathVariable Long id,
+            @RequestParam boolean accepted) {
+        Contract updatedContract = contractService.setDriverAcceptance(id, accepted);
+        return ResponseEntity.ok(updatedContract);
+    }
+
+    @PatchMapping("/{id}/client-acceptance")
+    public ResponseEntity<Contract> setClientAcceptance(
+            @PathVariable Long id,
+            @RequestParam boolean accepted) {
+        Contract updatedContract = contractService.setClientAcceptance(id, accepted);
+        return ResponseEntity.ok(updatedContract);
     }
 } 

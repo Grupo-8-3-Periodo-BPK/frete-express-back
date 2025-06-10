@@ -37,7 +37,6 @@ public class FormService {
 
     public Form save(Form form) {
         logger.info("Saving support form for: {}", form.getNameRequester());
-        form.setSendingDate(LocalDateTime.now());
         Form saved = formRepository.save(form);
         sendEmail(form);
         return saved;
@@ -60,8 +59,7 @@ public class FormService {
                 "Name: " + form.getNameRequester() + "\n" +
                 "Email: " + form.getReturnEmail() + "\n" +
                 "Subject: " + form.getSubject() + "\n" +
-                "Description: " + form.getProblemDescription() + "\n" +
-                "Sending Date: " + form.getSendingDate());
+                "Description: " + form.getProblemDescription());
         message.setFrom("noreply@expressfrete.com");
         try {
             mailSender.send(message);

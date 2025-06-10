@@ -4,15 +4,19 @@ import br.com.express_frete.fretesexpress.dto.ContractDTO;
 import br.com.express_frete.fretesexpress.model.Contract;
 import br.com.express_frete.fretesexpress.model.Freight;
 import br.com.express_frete.fretesexpress.model.User;
+import br.com.express_frete.fretesexpress.model.Vehicle;
+import br.com.express_frete.fretesexpress.model.Tracking;
 import br.com.express_frete.fretesexpress.repository.ContractRepository;
 import br.com.express_frete.fretesexpress.repository.FreightRepository;
 import br.com.express_frete.fretesexpress.repository.UserRepository;
+import br.com.express_frete.fretesexpress.repository.VehicleRepository;
+import br.com.express_frete.fretesexpress.repository.TrackingRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class ContractService {
@@ -25,6 +29,12 @@ public class ContractService {
 
     @Autowired
     private FreightRepository freightRepository;
+
+    @Autowired
+    private VehicleRepository vehicleRepository;
+
+    @Autowired
+    private TrackingRepository trackingRepository;
 
     public List<Contract> findAll() {
         return contractRepository.findAll();
@@ -46,34 +56,54 @@ public class ContractService {
     }
 
     private Contract saveContract(Contract contract, ContractDTO dto) {
-        contract.setName(dto.getName());
-
-        User client = userRepository.findById(dto.getClientId())
-                .orElseThrow(() -> new EntityNotFoundException("Client not found with id: " + dto.getClientId()));
+        User client = userRepository.findById(dto.getClient_id())
+                .orElseThrow(() -> new EntityNotFoundException("Client not found with id: " + dto.getClient_id()));
         contract.setClient(client);
 
-        User driver = userRepository.findById(dto.getDriverId())
-                .orElseThrow(() -> new EntityNotFoundException("Driver not found with id: " + dto.getDriverId()));
+        User driver = userRepository.findById(dto.getDriver_id())
+                .orElseThrow(() -> new EntityNotFoundException("Driver not found with id: " + dto.getDriver_id()));
         contract.setDriver(driver);
 
-        Freight freight = freightRepository.findById(dto.getFreightId())
-                .orElseThrow(() -> new EntityNotFoundException("Freight not found with id: " + dto.getFreightId()));
+        Freight freight = freightRepository.findById(dto.getFreight_id())
+                .orElseThrow(() -> new EntityNotFoundException("Freight not found with id: " + dto.getFreight_id()));
         contract.setFreight(freight);
 
-        contract.setDriverAccepted(dto.getDriverAccepted());
-        contract.setClientAccepted(dto.getClientAccepted());
+        Vehicle vehicle = vehicleRepository.findById(dto.getVehicle_id())
+                .orElseThrow(() -> new EntityNotFoundException("Vehicle not found with id: " + dto.getVehicle_id()));
+        contract.setVehicle(vehicle);
 
-        if (dto.getUserId() != null) {
-            User user = userRepository.findById(dto.getUserId())
-                    .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + dto.getUserId()));
-            contract.setUser(user);
-        }
+        contract.setPickupDate(dto.getPickup_date());
+        contract.setDeliveryDate(dto.getDelivery_date());
+        contract.setAgreedValue(dto.getAgreed_value());
 
+        contract.setDriverAccepted(dto.getDriver_accepted());
+        contract.setClientAccepted(dto.getClient_accepted());
+
+        Contract savedContract = contractRepository.save(contract);
+        dto.setDisplay_name(savedContract.getDisplayName());
+        return savedContract;
+    }
+
+    @Transactional
+    public Contract setDriverAcceptance(Long id, boolean accepted) {
+        Contract contract = findById(id);
+        contract.setDriverAccepted(accepted);
+        return contractRepository.save(contract);
+    }
+
+    @Transactional
+    public Contract setClientAcceptance(Long id, boolean accepted) {
+        Contract contract = findById(id);
+        contract.setClientAccepted(accepted);
         return contractRepository.save(contract);
     }
 
     public void delete(Long id) {
         Contract contract = findById(id);
+
+        List<Tracking> trackings = trackingRepository.findByContract(contract);
+        trackingRepository.deleteAll(trackings);
+
         contractRepository.delete(contract);
     }
 

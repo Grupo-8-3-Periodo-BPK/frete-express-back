@@ -4,7 +4,6 @@ import br.com.express_frete.fretesexpress.model.enums.RatingType;
 import com.fasterxml.jackson.annotation.JsonIdentityReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "review")
@@ -29,20 +28,6 @@ public class Review {
     @JoinColumn(name = "cliente_id")
     @JsonIdentityReference(alwaysAsId = true)
     private User client;
-
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = createdAt;
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
 
     public Long getId() {
         return id;
@@ -90,13 +75,5 @@ public class Review {
 
     public void setClient(User client) {
         this.client = client;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
     }
 }

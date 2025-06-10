@@ -11,12 +11,15 @@ import br.com.express_frete.fretesexpress.model.Contract;
 import br.com.express_frete.fretesexpress.model.Freight;
 import br.com.express_frete.fretesexpress.model.Tracking;
 import br.com.express_frete.fretesexpress.model.User;
+import br.com.express_frete.fretesexpress.model.Vehicle;
 import br.com.express_frete.fretesexpress.model.enums.Role;
-import br.com.express_frete.fretesexpress.model.enums.TrackingStatus;
+import br.com.express_frete.fretesexpress.model.enums.VehicleCategory;
+import br.com.express_frete.fretesexpress.model.enums.BodyType;
 import br.com.express_frete.fretesexpress.repository.ContractRepository;
 import br.com.express_frete.fretesexpress.repository.FreightRepository;
 import br.com.express_frete.fretesexpress.repository.TrackingRepository;
 import br.com.express_frete.fretesexpress.repository.UserRepository;
+import br.com.express_frete.fretesexpress.repository.VehicleRepository;
 
 import java.time.LocalDate;
 
@@ -33,6 +36,7 @@ public class FretesexpressApplication {
 			FreightRepository freightRepository,
 			ContractRepository contractRepository,
 			TrackingRepository trackingRepository,
+			VehicleRepository vehicleRepository,
 			BCryptPasswordEncoder encoder) {
 		return args -> {
 			if (userRepository.count() == 0) {
@@ -75,6 +79,7 @@ public class FretesexpressApplication {
 				// Criar exemplo de frete
 				Freight freight = new Freight();
 				freight.setName("Frete de Móveis");
+				freight.setUserId(client.getId());
 				freight.setWeight(150.0);
 				freight.setHeight(1.2);
 				freight.setLength(2.5);
@@ -90,6 +95,7 @@ public class FretesexpressApplication {
 				// Criar um segundo exemplo de frete
 				Freight freight2 = new Freight();
 				freight2.setName("Entrega de Eletrônicos");
+				freight2.setUserId(client.getId());
 				freight2.setWeight(80.0);
 				freight2.setHeight(0.8);
 				freight2.setLength(1.5);
@@ -102,45 +108,64 @@ public class FretesexpressApplication {
 				freight2.setDestination_state("SC");
 				freight2 = freightRepository.save(freight2);
 
+				// Criar veículo exemplo
+				Vehicle vehicle = new Vehicle();
+				vehicle.setLicensePlate("ABC1D23");
+				vehicle.setModel("Caminhão Baú");
+				vehicle.setBrand("Volvo");
+				vehicle.setYear(2020);
+				vehicle.setColor("Branco");
+				vehicle.setRenavam("12345678901");
+				vehicle.setWeight(4000.0);
+				vehicle.setLength(12.0);
+				vehicle.setWidth(2.5);
+				vehicle.setHeight(3.0);
+				vehicle.setAxlesCount(3);
+				vehicle.setHasCanvas(false);
+				vehicle.setCategory(VehicleCategory.TRUCK);
+				vehicle.setBodyType(BodyType.BOX);
+				vehicle.setUser(driver);
+				vehicle = vehicleRepository.save(vehicle);
+
 				// Criar contrato exemplo
 				Contract contract = new Contract();
-				contract.setName("Contrato de Transporte de Móveis");
 				contract.setClient(client);
 				contract.setDriver(driver);
 				contract.setFreight(freight);
+				contract.setVehicle(vehicle);
 				contract.setDriverAccepted(true);
 				contract.setClientAccepted(true);
-				contract.setUser(admin);
+				contract.setPickupDate(LocalDate.now());
+				contract.setDeliveryDate(LocalDate.now().plusDays(7));
+				contract.setAgreedValue(2500.00);
 				contract = contractRepository.save(contract);
 
 				// Criar outro contrato exemplo (pendente de aceitação)
 				Contract contract2 = new Contract();
-				contract2.setName("Contrato de Entrega de Eletrônicos");
 				contract2.setClient(client);
 				contract2.setDriver(driver);
 				contract2.setFreight(freight2);
+				contract2.setVehicle(vehicle);
 				contract2.setDriverAccepted(true);
 				contract2.setClientAccepted(false);
-				contract2.setUser(admin);
+				contract2.setPickupDate(LocalDate.now().plusDays(1));
+				contract2.setDeliveryDate(LocalDate.now().plusDays(5));
+				contract2.setAgreedValue(1800.00);
 				contract2 = contractRepository.save(contract2);
 
 				// Criar tracking para o primeiro contrato
 				Tracking tracking1 = new Tracking();
 				tracking1.setFreight(freight);
 				tracking1.setContract(contract);
-				tracking1.setStatus(TrackingStatus.WAITING_PICKUP);
 				tracking1.setCurrentLocation("São Paulo, SP - Depósito Central");
-				tracking1.setUpdateDate(LocalDate.now().minusDays(1));
 				tracking1.setContractUser(admin);
 				trackingRepository.save(tracking1);
 
-				// Criar outro tracking para o mesmo contrato (atualizando status)
+				// Criar outro tracking para o mesmo contrato
 				Tracking tracking2 = new Tracking();
 				tracking2.setFreight(freight);
 				tracking2.setContract(contract);
-				tracking2.setStatus(TrackingStatus.IN_TRANSIT);
 				tracking2.setCurrentLocation("Rodovia Dutra, KM 200");
-				tracking2.setUpdateDate(LocalDate.now());
 				tracking2.setContractUser(driver);
 				trackingRepository.save(tracking2);
 

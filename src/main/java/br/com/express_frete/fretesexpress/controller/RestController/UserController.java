@@ -6,9 +6,14 @@ import br.com.express_frete.fretesexpress.service.UserService;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import java.util.HashMap;
 import java.util.List;
@@ -24,20 +29,53 @@ public class UserController {
 
     // GET: List all users
     @GetMapping
-    public List<User> findAll() {
-        return userService.findAll();
+    public ResponseEntity<List<User>> findAll() {
+        return ResponseEntity.ok(userService.findAll());
+    }
+
+    // GET: List all users with pagination
+    @GetMapping("/paged")
+    public ResponseEntity<Page<User>> findAllPaged(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sort) {
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sort));
+        return ResponseEntity.ok(userService.findAllPaged(pageable));
     }
 
     // GET: List only drivers
     @GetMapping("/drivers")
-    public List<User> findDrivers() {
-        return userService.findByRole(Role.DRIVER);
+    public ResponseEntity<List<User>> findDrivers() {
+        return ResponseEntity.ok(userService.findByRole(Role.DRIVER));
+    }
+
+    // GET: List only drivers with pagination
+    @GetMapping("/drivers/paged")
+    public ResponseEntity<Page<User>> findDriversPaged(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sort) {
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sort));
+        return ResponseEntity.ok(userService.findByRolePaged(Role.DRIVER, pageable));
     }
 
     // GET: List only clients
     @GetMapping("/clients")
-    public List<User> findClients() {
-        return userService.findByRole(Role.CLIENT);
+    public ResponseEntity<List<User>> findClients() {
+        return ResponseEntity.ok(userService.findByRole(Role.CLIENT));
+    }
+
+    // GET: List only clients with pagination
+    @GetMapping("/clients/paged")
+    public ResponseEntity<Page<User>> findClientsPaged(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sort) {
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sort));
+        return ResponseEntity.ok(userService.findByRolePaged(Role.CLIENT, pageable));
     }
 
     // GET: Find user by ID
@@ -96,11 +134,17 @@ public class UserController {
 
     // DELETE: Remove user by ID
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<?> delete(@PathVariable Long id) {
         Optional<User> userOpt = userService.findByIdOptional(id);
         if (userOpt.isPresent()) {
-            userService.delete(id);
-            return ResponseEntity.noContent().build();
+            try {
+                userService.delete(id);
+                return ResponseEntity.noContent().build();
+            } catch (DataIntegrityViolationException e) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "Não é possível remover o usuário. Ele está associado a outros registros no sistema (por exemplo, rastreamentos ou contratos).");
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+            }
         } else {
             return ResponseEntity.notFound().build();
         }

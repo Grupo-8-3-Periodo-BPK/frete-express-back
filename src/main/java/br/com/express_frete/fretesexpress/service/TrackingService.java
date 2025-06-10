@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -43,13 +44,6 @@ public class TrackingService {
     public Tracking create(TrackingDTO trackingDTO) {
         Tracking tracking = new Tracking();
 
-        // Se a data de atualização não for fornecida, use a data atual
-        if (trackingDTO.getUpdateDate() == null) {
-            tracking.setUpdateDate(LocalDate.now());
-        } else {
-            tracking.setUpdateDate(trackingDTO.getUpdateDate());
-        }
-
         return saveTracking(tracking, trackingDTO);
     }
 
@@ -67,12 +61,7 @@ public class TrackingService {
                 .orElseThrow(() -> new EntityNotFoundException("Contract not found with id: " + dto.getContractId()));
         tracking.setContract(contract);
 
-        tracking.setStatus(dto.getStatus());
         tracking.setCurrentLocation(dto.getCurrentLocation());
-
-        if (dto.getUpdateDate() != null) {
-            tracking.setUpdateDate(dto.getUpdateDate());
-        }
 
         if (dto.getContractUserId() != null) {
             User contractUser = userRepository.findById(dto.getContractUserId())
@@ -104,6 +93,6 @@ public class TrackingService {
     public Tracking getLatestTrackingForContract(Long contractId) {
         Contract contract = contractRepository.findById(contractId)
                 .orElseThrow(() -> new EntityNotFoundException("Contract not found with id: " + contractId));
-        return trackingRepository.findTopByContractOrderByUpdateDateDesc(contract);
+        return trackingRepository.findTopByContractOrderByIdDesc(contract);
     }
 }

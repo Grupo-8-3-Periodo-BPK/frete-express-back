@@ -5,39 +5,48 @@ import br.com.express_frete.fretesexpress.repository.VehicleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
 public class VehicleService {
 
     @Autowired
-    private VehicleRepository veiculoRepository;
+    private VehicleRepository vehicleRepository;
 
-    public Vehicle salvar(Vehicle veiculo) {
-        return veiculoRepository.save(veiculo);
+    public List<Vehicle> findAll(){
+        return vehicleRepository.findAll();
     }
 
-    public Optional<Vehicle> buscarPorId(Long id) {
-        return veiculoRepository.findById(id);
+    public Vehicle save(Vehicle vehicle) {
+        return vehicleRepository.save(vehicle);
     }
 
-    public Optional<Vehicle> buscarPorPlaca(String placa) {
-        return veiculoRepository.findByLicensePlate(placa);
+    public List<Vehicle> findByUserId(Long userId) {
+        return vehicleRepository.findByUserId(userId);
     }
 
-    public Optional<Vehicle> buscarPorRenavam(String renavam) {
-        return veiculoRepository.findByRenavam(renavam);
+    public Optional<Vehicle> findById(Long id) {
+        return vehicleRepository.findById(id);
     }
 
-    public boolean existePlaca(String placa) {
-        return veiculoRepository.existsByLicensePlate(placa);
+    public Optional<Vehicle> findByLicensePlate(String placa) {
+        return vehicleRepository.findByLicensePlate(placa);
     }
 
-    public boolean existeRenavam(String renavam) {
-        return veiculoRepository.existsByRenavam(renavam);
+    public Optional<Vehicle> findByRenavam(String renavam) {
+        return vehicleRepository.findByRenavam(renavam);
     }
 
-    public void excluir(Long id) {
-        veiculoRepository.deleteById(id);
+    public boolean existsByLicensePlate(String placa) {
+        return vehicleRepository.existsByLicensePlate(placa);
+    }
+
+    public boolean existsByRenavam(String renavam) {
+        return vehicleRepository.existsByRenavam(renavam);
+    }
+
+    public void deleteById(Long id) {
+        vehicleRepository.deleteById(id);
     }
 }

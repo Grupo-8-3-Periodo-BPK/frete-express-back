@@ -1,4 +1,4 @@
-package br.com.express_frete.fretesexpress.controller;
+package br.com.express_frete.fretesexpress.controller.RestController;
 
 import br.com.express_frete.fretesexpress.dto.TrackingDTO;
 import br.com.express_frete.fretesexpress.model.Tracking;

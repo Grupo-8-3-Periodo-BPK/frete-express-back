@@ -42,7 +42,6 @@ public class JwtFilter extends OncePerRequestFilter {
         try {
             String requestUri = request.getRequestURI();
 
-            // Não verificar token para endpoints públicos
             if (requestUri.startsWith("/api/auth/") ||
                     requestUri.startsWith("/swagger-ui/") ||
                     requestUri.startsWith("/v3/api-docs/")) {
@@ -51,23 +50,17 @@ public class JwtFilter extends OncePerRequestFilter {
                 return;
             }
 
-            // Extrair token do cabeçalho de autorização ou cookies
             String token = extractTokenFromRequest(request);
 
             if (token != null) {
-
-                // Verificar se o token JWT é válido
                 if (jwtService.isTokenValid(token)) {
                     try {
-                        // Validar o JWT e extrair as claims
                         Claims claims = jwtService.validateToken(token);
 
-                        // Extrair informações do usuário
                         Long userId = Long.parseLong(claims.getSubject());
                         String email = claims.get("email", String.class);
                         String role = claims.get("role", String.class);
 
-                        // Buscar usuário do banco de dados para garantir que ainda existe
                         Optional<User> userOpt = userRepository.findById(userId);
                         if (userOpt.isPresent()) {
                             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
@@ -77,7 +70,6 @@ public class JwtFilter extends OncePerRequestFilter {
                             SecurityContextHolder.getContext().setAuthentication(authentication);
                             System.out.println("Usuário autenticado: " + email + " com função: " + role);
 
-                            // Continuar a cadeia de filtros
                             filterChain.doFilter(request, response);
                             return;
                         } else {
@@ -100,17 +92,13 @@ public class JwtFilter extends OncePerRequestFilter {
                 return;
             }
         } catch (Exception e) {
-            // Garantir que o filtro não quebre a cadeia de filtros
             System.out.println("Erro no filtro JWT: " + e.getMessage());
         }
 
-        // Sempre continuar a cadeia de filtros se chegar até aqui (por precaução)
         filterChain.doFilter(request, response);
     }
 
-    /**
-     * Extrai o token do cabeçalho de autorização ou cookies
-     */
+    //Extrai o token do cabeçalho de autorização ou cookies
     private String extractTokenFromRequest(HttpServletRequest request) {
         // Primeiro tenta extrair do cabeçalho Authorization
         String authHeader = request.getHeader("Authorization");
@@ -143,9 +131,7 @@ public class JwtFilter extends OncePerRequestFilter {
         return null;
     }
 
-    /**
-     * Método para lidar com falhas de autenticação de maneira padronizada
-     */
+    // Método para lidar com falhas de autenticação de maneira padronizada
     private void handleAuthenticationFailure(HttpServletResponse response, String message) throws IOException {
         response.setStatus(HttpServletResponse.SC_FORBIDDEN);
         response.setContentType("application/json;charset=UTF-8");

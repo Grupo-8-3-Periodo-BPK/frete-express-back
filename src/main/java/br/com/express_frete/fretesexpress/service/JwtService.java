@@ -33,7 +33,6 @@ public class JwtService {
     @PostConstruct
     public void init() {
         try {
-            // Tenta ler o JWT_SECRET do arquivo .env
             File envFile = new File(".env");
             if (envFile.exists()) {
                 Properties props = new Properties();
@@ -48,20 +47,16 @@ public class JwtService {
                     }
                 }
             }
-            // Se não encontrou no .env, tenta da variável de ambiente
             if (secret == null || secret.trim().isEmpty()) {
                 secret = System.getenv("JWT_SECRET");
             }
 
-            // Se ainda estiver nulo, usa o application-dev.properties (carregado
-            // automaticamente pelo Spring)
             if (secret == null || secret.trim().isEmpty()) {
                 secret = "chaveMuitoSeguraParaDesenvolvimentoLocalNaoProduzirAssim";
                 System.out.println(
                         "AVISO: Usando chave JWT padrão. Configure JWT_SECRET no arquivo .env ou como variável de ambiente para produção!");
             }
 
-            // Remove possíveis aspas e espaços extras
             secret = secret.trim().replaceAll("^[\"']|[\"']$", "");
         } catch (Exception e) {
             System.err.println("Erro ao acessar JWT_SECRET: " + e.getMessage());
@@ -113,9 +108,6 @@ public class JwtService {
         }
     }
 
-    /**
-     * Checks if a JWT token is valid without throwing an exception.
-     */
     public boolean isTokenValid(String token) {
         if (token == null || token.isEmpty())
             return false;

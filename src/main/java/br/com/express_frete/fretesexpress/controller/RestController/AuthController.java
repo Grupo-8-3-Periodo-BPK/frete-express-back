@@ -38,7 +38,6 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody @Valid AuthRequest authRequest, HttpServletResponse response) {
         try {
-            // Verify if the user exists
             Optional<User> userOpt = verifyUser(authRequest.getLogin());
             if (userOpt.isEmpty()) {
                 Map<String, String> error = new HashMap<>();
@@ -46,34 +45,27 @@ public class AuthController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
             }
             User user = userOpt.get();
-            // Verify if the password is correct
             if (!passwordEncoder.matches(authRequest.getPassword(), user.getPassword())) {
                 Map<String, String> error = new HashMap<>();
                 error.put("message", "Invalid credentials");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
             }
 
-            // Gerar o token JWT
             String token = jwtService.generateToken(user);
 
-            // Calcular data de expiração (24 horas)
             Instant expiration = jwtService.getExpirationTime();
 
-            // Configurar cookie para desenvolvimento local
             Cookie jwtCookie = new Cookie("jwt_token", token);
             jwtCookie.setHttpOnly(true);
-            jwtCookie.setSecure(false); // false para HTTP local
+            jwtCookie.setSecure(false);
             jwtCookie.setPath("/");
-            jwtCookie.setMaxAge(24 * 60 * 60); // 24 horas
+            jwtCookie.setMaxAge(24 * 60 * 60);
 
-            // Adicionar cookie à resposta
             response.addCookie(jwtCookie);
 
-            // Log para debug
             System.out.println(
                     "Cookie JWT configurado: " + jwtCookie.getName() + "=" + token.substring(0, 20) + "... (truncado)");
 
-            // Create response without including the token
             AuthResponse authResponse = new AuthResponse();
             authResponse.setId(user.getId());
             authResponse.setName(user.getName());
@@ -93,12 +85,11 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
         try {
-            // Remove the cookie
             Cookie cookie = new Cookie("jwt_token", null);
             cookie.setHttpOnly(true);
-            cookie.setSecure(false); // Mesma configuração do login
+            cookie.setSecure(false);
             cookie.setPath("/");
-            cookie.setMaxAge(0); // Remove the cookie
+            cookie.setMaxAge(0);
             response.addCookie(cookie);
 
             Map<String, String> responseMap = new HashMap<>();
@@ -117,7 +108,6 @@ public class AuthController {
         try {
             String token = extractToken(request);
             if (token == null) {
-                // Try to extract from cookies
                 Cookie[] cookies = request.getCookies();
                 if (cookies != null) {
                     for (Cookie cookie : cookies) {
@@ -136,7 +126,6 @@ public class AuthController {
                 }
             }
 
-            // Verify if the JWT token is valid
             if (!jwtService.isTokenValid(token)) {
                 Map<String, Object> response = new HashMap<>();
                 response.put("valid", false);
@@ -144,7 +133,6 @@ public class AuthController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
             }
 
-            // Validate the JWT token
             Claims claims = jwtService.validateToken(token);
 
             TokenValidationResponse response = new TokenValidationResponse();
@@ -184,17 +172,14 @@ public class AuthController {
     }
 
     private Optional<User> verifyUser(String login) {
-        // Try to find the user by email
         Optional<User> userOpt = userRepository.findByEmail(login);
         if (userOpt.isPresent())
             return userOpt;
 
-        // Try to find the user by CPF/CNPJ
         userOpt = userRepository.findByCpf_cnpj(login);
         if (userOpt.isPresent())
             return userOpt;
 
-        // Try to find the user by username
         return userRepository.findByUsername(login);
     }
 }
