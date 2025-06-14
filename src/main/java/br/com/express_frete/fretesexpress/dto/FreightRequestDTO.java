@@ -1,23 +1,14 @@
-package br.com.express_frete.fretesexpress.model;
+package br.com.express_frete.fretesexpress.dto;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
-
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import java.time.LocalDate;
 
-@Entity
-@Table(name = "freight")
-public class Freight {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class FreightRequestDTO {
 
     @NotBlank
     private String name;
-
-    @NotNull
-    private Long user_id;
 
     @NotNull
     private Double price;
@@ -52,15 +43,7 @@ public class Freight {
     @NotBlank
     private String destination_state;
 
-    // Getters e Setters
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
+    // Getters and Setters
 
     public String getName() {
         return name;
@@ -68,14 +51,6 @@ public class Freight {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public Long getUserId() {
-        return user_id;
-    }
-
-    public void setUserId(Long user_id) {
-        this.user_id = user_id;
     }
 
     public Double getPrice() {

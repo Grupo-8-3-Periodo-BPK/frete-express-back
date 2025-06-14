@@ -43,6 +43,7 @@ public class JwtFilter extends OncePerRequestFilter {
             String requestUri = request.getRequestURI();
 
             if (requestUri.startsWith("/api/auth/") ||
+                    requestUri.startsWith("/api/users/register") ||
                     requestUri.startsWith("/swagger-ui/") ||
                     requestUri.startsWith("/v3/api-docs/")) {
 
@@ -63,8 +64,9 @@ public class JwtFilter extends OncePerRequestFilter {
 
                         Optional<User> userOpt = userRepository.findById(userId);
                         if (userOpt.isPresent()) {
+                            User user = userOpt.get();
                             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                                    userId, null,
+                                    user, null,
                                     List.of(new SimpleGrantedAuthority("ROLE_" + role)));
 
                             SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -98,34 +100,19 @@ public class JwtFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    //Extrai o token do cabeçalho de autorização ou cookies
+    // Extrai o token do cabeçalho de autorização ou cookies
     private String extractTokenFromRequest(HttpServletRequest request) {
-        // Primeiro tenta extrair do cabeçalho Authorization
-        String authHeader = request.getHeader("Authorization");
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
-            System.out.println("Token extraído do cabeçalho Authorization");
-            return token;
-        }
-
         // Se não encontrou no cabeçalho, tenta extrair dos cookies
         Cookie[] cookies = request.getCookies();
+        if (cookies == null && (request.getRequestURI().startsWith("/api/users/register"))) {
+            return null;
+        }
         if (cookies != null) {
             for (Cookie cookie : cookies) {
                 if ("jwt_token".equals(cookie.getName())) {
-                    System.out.println("Token extraído do cookie jwt_token");
                     return cookie.getValue();
                 }
             }
-
-            // Imprimir todos os cookies disponíveis para debug
-            System.out.println("Cookies disponíveis: ");
-            for (Cookie cookie : cookies) {
-                System.out.println("  - " + cookie.getName() + ": "
-                        + cookie.getValue().substring(0, Math.min(10, cookie.getValue().length())) + "...");
-            }
-        } else {
-            System.out.println("Nenhum cookie encontrado no request");
         }
 
         return null;

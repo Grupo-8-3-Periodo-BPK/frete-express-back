@@ -63,9 +63,6 @@ public class AuthController {
 
             response.addCookie(jwtCookie);
 
-            System.out.println(
-                    "Cookie JWT configurado: " + jwtCookie.getName() + "=" + token.substring(0, 20) + "... (truncado)");
-
             AuthResponse authResponse = new AuthResponse();
             authResponse.setId(user.getId());
             authResponse.setName(user.getName());
@@ -75,7 +72,6 @@ public class AuthController {
 
             return ResponseEntity.ok(authResponse);
         } catch (Exception e) {
-            System.out.println("Error in login: " + e.getMessage());
             Map<String, String> error = new HashMap<>();
             error.put("message", "Internal server error");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
@@ -96,7 +92,6 @@ public class AuthController {
             responseMap.put("message", "Logout successful");
             return ResponseEntity.ok(responseMap);
         } catch (Exception e) {
-            System.out.println("Error in logout: " + e.getMessage());
             Map<String, String> error = new HashMap<>();
             error.put("message", "Error performing logout");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
@@ -144,14 +139,12 @@ public class AuthController {
 
             return ResponseEntity.ok(response);
         } catch (JwtException e) {
-            System.out.println("Invalid JWT token: " + e.getMessage());
 
             Map<String, Object> response = new HashMap<>();
             response.put("valid", false);
             response.put("message", "Invalid token");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         } catch (Exception e) {
-            System.out.println("Error validating token: " + e.getMessage());
             Map<String, Object> response = new HashMap<>();
             response.put("valid", false);
             response.put("message", "Error validating token");

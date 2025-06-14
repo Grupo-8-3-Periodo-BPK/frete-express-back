@@ -41,7 +41,6 @@ public class JwtService {
                     while ((line = reader.readLine()) != null) {
                         if (line.startsWith("JWT_SECRET=")) {
                             secret = line.substring("JWT_SECRET=".length());
-                            System.out.println("Chave JWT carregada do arquivo .env");
                             break;
                         }
                     }
@@ -52,9 +51,7 @@ public class JwtService {
             }
 
             if (secret == null || secret.trim().isEmpty()) {
-                secret = "chaveMuitoSeguraParaDesenvolvimentoLocalNaoProduzirAssim";
-                System.out.println(
-                        "AVISO: Usando chave JWT padrão. Configure JWT_SECRET no arquivo .env ou como variável de ambiente para produção!");
+                secret = "b7a3161ef64b7ea4afb344ba5a121e7f69083e4ff3aaae402d5dd65f500f6d2c";
             }
 
             secret = secret.trim().replaceAll("^[\"']|[\"']$", "");
@@ -83,7 +80,6 @@ public class JwtService {
                     .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                     .compact();
         } catch (Exception e) {
-            System.out.println("Error generating token: " + e.getMessage());
             throw new RuntimeException("Error generating JWT token", e);
         }
     }
@@ -100,10 +96,8 @@ public class JwtService {
                     .parseClaimsJws(token)
                     .getBody();
         } catch (JwtException e) {
-            System.out.println("Error in token validation: " + e.getMessage());
             throw e;
         } catch (Exception e) {
-            System.out.println("Unexpected error in token validation: " + e.getMessage());
             throw new JwtException("Error validating token: " + e.getMessage());
         }
     }

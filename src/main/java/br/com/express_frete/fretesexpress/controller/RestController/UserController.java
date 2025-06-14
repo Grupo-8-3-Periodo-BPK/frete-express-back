@@ -86,12 +86,61 @@ public class UserController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // POST: Create new user
-    @PostMapping
-    public ResponseEntity<?> create(@RequestBody @Valid User user) {
+    // POST: Create new client user
+    @PostMapping("/register/client")
+    public ResponseEntity<?> registerClient(@RequestBody @Valid User user) {
         try {
+            user.setRole(Role.CLIENT);
             User newUser = userService.save(user);
             return ResponseEntity.status(HttpStatus.CREATED).body(newUser);
+        } catch (DataIntegrityViolationException e) {
+            Map<String, String> error = new HashMap<>();
+            String causeMessage = e.getMostSpecificCause().getMessage();
+            if (causeMessage.contains("user_username_key") || causeMessage.contains("USERNAME")) {
+                error.put("error", "Nome de usuário já existe.");
+            } else if (causeMessage.contains("user_email_key") || causeMessage.contains("EMAIL")) {
+                error.put("error", "E-mail já cadastrado.");
+            } else if (causeMessage.contains("user_cpf_cnpj_key") || causeMessage.contains("CPF_CNPJ")) {
+                error.put("error", "CPF/CNPJ já cadastrado.");
+            } else {
+                error.put("error", "Erro de integridade de dados. Um campo único já está em uso.");
+            }
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+        } catch (ConstraintViolationException e) {
+            Map<String, String> errors = new HashMap<>();
+            e.getConstraintViolations().forEach(violation -> {
+                String fieldName = violation.getPropertyPath().toString();
+                String message = violation.getMessage();
+                errors.put(fieldName, message);
+            });
+            return ResponseEntity.badRequest().body(errors);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(error);
+        }
+    }
+
+    // POST: Create new driver user
+    @PostMapping("/register/driver")
+    public ResponseEntity<?> registerDriver(@RequestBody @Valid User user) {
+        try {
+            user.setRole(Role.DRIVER);
+            User newUser = userService.save(user);
+            return ResponseEntity.status(HttpStatus.CREATED).body(newUser);
+        } catch (DataIntegrityViolationException e) {
+            Map<String, String> error = new HashMap<>();
+            String causeMessage = e.getMostSpecificCause().getMessage();
+            if (causeMessage.contains("user_username_key") || causeMessage.contains("USERNAME")) {
+                error.put("error", "Nome de usuário já existe.");
+            } else if (causeMessage.contains("user_email_key") || causeMessage.contains("EMAIL")) {
+                error.put("error", "E-mail já cadastrado.");
+            } else if (causeMessage.contains("user_cpf_cnpj_key") || causeMessage.contains("CPF_CNPJ")) {
+                error.put("error", "CPF/CNPJ já cadastrado.");
+            } else {
+                error.put("error", "Erro de integridade de dados. Um campo único já está em uso.");
+            }
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
         } catch (ConstraintViolationException e) {
             Map<String, String> errors = new HashMap<>();
             e.getConstraintViolations().forEach(violation -> {
@@ -142,7 +191,8 @@ public class UserController {
                 return ResponseEntity.noContent().build();
             } catch (DataIntegrityViolationException e) {
                 Map<String, String> error = new HashMap<>();
-                error.put("error", "Não é possível remover o usuário. Ele está associado a outros registros no sistema (por exemplo, rastreamentos ou contratos).");
+                error.put("error",
+                        "Não é possível remover o usuário. Ele está associado a outros registros no sistema (por exemplo, rastreamentos ou contratos).");
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
             }
         } else {

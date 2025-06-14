@@ -79,6 +79,7 @@ public class FretesexpressApplication {
 				// Criar exemplo de frete
 				Freight freight = new Freight();
 				freight.setName("Frete de Móveis");
+				freight.setPrice(2350.40);
 				freight.setUserId(client.getId());
 				freight.setWeight(150.0);
 				freight.setHeight(1.2);
@@ -95,6 +96,7 @@ public class FretesexpressApplication {
 				// Criar um segundo exemplo de frete
 				Freight freight2 = new Freight();
 				freight2.setName("Entrega de Eletrônicos");
+				freight2.setPrice(5430.20);
 				freight2.setUserId(client.getId());
 				freight2.setWeight(80.0);
 				freight2.setHeight(0.8);

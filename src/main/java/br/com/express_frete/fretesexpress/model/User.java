@@ -16,6 +16,7 @@ public class User {
     private Long id;
 
     @NotBlank
+    @Column(unique = true)
     private String username;
 
     @NotBlank
@@ -24,6 +25,7 @@ public class User {
     @Email(message = "Invalid email")
     @NotBlank
     @Size(max = 100, message = "The email must be at most 100 characters")
+    @Column(unique = true)
     private String email;
 
     @NotBlank
