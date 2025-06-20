@@ -5,7 +5,6 @@ import br.com.express_frete.fretesexpress.dto.FreightUpdateDTO;
 import br.com.express_frete.fretesexpress.model.Freight;
 import br.com.express_frete.fretesexpress.model.User;
 import br.com.express_frete.fretesexpress.repository.FreightRepository;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
