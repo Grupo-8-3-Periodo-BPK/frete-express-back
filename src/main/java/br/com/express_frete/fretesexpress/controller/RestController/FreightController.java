@@ -4,7 +4,13 @@ import br.com.express_frete.fretesexpress.dto.FreightRequestDTO;
 import br.com.express_frete.fretesexpress.dto.FreightUpdateDTO;
 import br.com.express_frete.fretesexpress.model.Freight;
 import br.com.express_frete.fretesexpress.model.User;
+import br.com.express_frete.fretesexpress.model.enums.FreightStatus;
+import br.com.express_frete.fretesexpress.model.enums.Status;
+import br.com.express_frete.fretesexpress.repository.ContractRepository;
 import br.com.express_frete.fretesexpress.repository.FreightRepository;
+import br.com.express_frete.fretesexpress.repository.TrackingRepository;
+import br.com.express_frete.fretesexpress.service.FreightService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -13,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -23,9 +30,24 @@ public class FreightController {
     @Autowired
     private FreightRepository repository;
 
+    @Autowired
+    private ContractRepository contractRepository;
+
+    @Autowired
+    private TrackingRepository trackingRepository;
+
+    @Autowired
+    private FreightService freightService;
+
     @GetMapping
-    public List<Freight> getAll() {
-        return repository.findAll();
+    public ResponseEntity<List<Freight>> getAllFreights(@RequestParam(required = false) FreightStatus status) {
+        List<Freight> freights;
+        if (status != null) {
+            freights = freightService.findByStatus(status);
+        } else {
+            freights = freightService.findAll();
+        }
+        return ResponseEntity.ok(freights);
     }
 
     @PostMapping
@@ -53,11 +75,9 @@ public class FreightController {
         freight.setDestination_city(freightDTO.getDestination_city());
         freight.setDestination_state(freightDTO.getDestination_state());
 
-        // Atribui o ID do usuário autenticado
         freight.setUserId(user.getId());
 
         Freight savedFreight = repository.save(freight);
-
         return ResponseEntity.status(HttpStatus.CREATED).body(savedFreight);
     }
 
@@ -100,13 +120,37 @@ public class FreightController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> delete(@PathVariable Long id) {
-        try {
-            repository.deleteById(id);
-            return ResponseEntity.ok("Frete deletado com sucesso.");
-        } catch (DataIntegrityViolationException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body("Não é possível excluir este frete pois ele está associado a um contrato existente.");
+    public ResponseEntity<?> delete(@PathVariable Long id) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !(auth.getPrincipal() instanceof User)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Usuário não autenticado.");
         }
+        User user = (User) auth.getPrincipal();
+
+        return repository.findById(id).map(freight -> {
+            if (!freight.getUserId().equals(user.getId())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body("Você não tem permissão para excluir este frete.");
+            }
+
+            var contracts = contractRepository.findByFreight(freight);
+            boolean hasActiveOrCompletedContracts = contracts.stream()
+                    .anyMatch(c -> c.getStatus() == Status.ACTIVE || c.getStatus() == Status.COMPLETED);
+
+            if (hasActiveOrCompletedContracts) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body("Não é possível excluir este frete, pois ele possui contratos ativos ou concluídos.");
+            }
+
+            contracts.forEach(contract -> {
+                var trackings = trackingRepository.findByContract(contract);
+                trackingRepository.deleteAll(trackings);
+            });
+
+            contractRepository.deleteAll(contracts);
+            repository.delete(freight);
+
+            return ResponseEntity.noContent().build();
+        }).orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).body("Frete não encontrado."));
     }
 }

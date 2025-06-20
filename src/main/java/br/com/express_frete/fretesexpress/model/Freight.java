@@ -1,5 +1,6 @@
 package br.com.express_frete.fretesexpress.model;
 
+import br.com.express_frete.fretesexpress.model.enums.FreightStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 
@@ -51,6 +52,10 @@ public class Freight {
 
     @NotBlank
     private String destination_state;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
+    private FreightStatus status = FreightStatus.AVAILABLE;
 
     // Getters e Setters
 
@@ -164,5 +169,13 @@ public class Freight {
 
     public void setDestination_state(String destination_state) {
         this.destination_state = destination_state;
+    }
+
+    public FreightStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(FreightStatus status) {
+        this.status = status;
     }
 }

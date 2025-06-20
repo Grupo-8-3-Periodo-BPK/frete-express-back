@@ -1,7 +1,9 @@
 package br.com.express_frete.fretesexpress.controller.RestController;
 
 import br.com.express_frete.fretesexpress.dto.ContractDTO;
+import br.com.express_frete.fretesexpress.dto.ContractResponseDTO;
 import br.com.express_frete.fretesexpress.model.Contract;
+import br.com.express_frete.fretesexpress.model.enums.Status;
 import br.com.express_frete.fretesexpress.service.ContractService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,12 +21,12 @@ public class ContractController {
     private ContractService contractService;
 
     @GetMapping
-    public ResponseEntity<List<Contract>> getAllContracts() {
+    public ResponseEntity<List<ContractResponseDTO>> getAllContracts() {
         return ResponseEntity.ok(contractService.findAll());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Contract> getContractById(@PathVariable Long id) {
+    public ResponseEntity<ContractResponseDTO> getContractById(@PathVariable Long id) {
         return ResponseEntity.ok(contractService.findById(id));
     }
 
@@ -47,33 +49,41 @@ public class ContractController {
     }
 
     @GetMapping("/client/{clientId}")
-    public ResponseEntity<List<Contract>> getContractsByClient(@PathVariable Long clientId) {
+    public ResponseEntity<List<ContractResponseDTO>> getContractsByClient(@PathVariable Long clientId) {
         return ResponseEntity.ok(contractService.findByClient(clientId));
     }
 
     @GetMapping("/driver/{driverId}")
-    public ResponseEntity<List<Contract>> getContractsByDriver(@PathVariable Long driverId) {
+    public ResponseEntity<List<ContractResponseDTO>> getContractsByDriver(@PathVariable Long driverId) {
         return ResponseEntity.ok(contractService.findByDriver(driverId));
     }
 
     @GetMapping("/freight/{freightId}")
-    public ResponseEntity<List<Contract>> getContractsByFreight(@PathVariable Long freightId) {
+    public ResponseEntity<List<ContractResponseDTO>> getContractsByFreight(@PathVariable Long freightId) {
         return ResponseEntity.ok(contractService.findByFreight(freightId));
     }
 
-    @PatchMapping("/{id}/driver-acceptance")
-    public ResponseEntity<Contract> setDriverAcceptance(
-            @PathVariable Long id,
-            @RequestParam boolean accepted) {
-        Contract updatedContract = contractService.setDriverAcceptance(id, accepted);
+    @PatchMapping("/{id}/approve")
+    public ResponseEntity<ContractResponseDTO> approveContract(@PathVariable Long id) {
+        ContractResponseDTO updatedContract = contractService.approveContract(id);
         return ResponseEntity.ok(updatedContract);
     }
 
-    @PatchMapping("/{id}/client-acceptance")
-    public ResponseEntity<Contract> setClientAcceptance(
-            @PathVariable Long id,
-            @RequestParam boolean accepted) {
-        Contract updatedContract = contractService.setClientAcceptance(id, accepted);
+    @PatchMapping("/{id}/cancel-by-driver")
+    public ResponseEntity<ContractResponseDTO> cancelByDriver(@PathVariable Long id) {
+        ContractResponseDTO updatedContract = contractService.updateStatus(id, Status.CANCELLED_BY_DRIVER);
         return ResponseEntity.ok(updatedContract);
     }
-} 
+
+    @PatchMapping("/{id}/cancel-by-client")
+    public ResponseEntity<ContractResponseDTO> cancelByClient(@PathVariable Long id) {
+        ContractResponseDTO updatedContract = contractService.updateStatus(id, Status.CANCELLED_BY_CLIENT);
+        return ResponseEntity.ok(updatedContract);
+    }
+
+    @PatchMapping("/{id}/complete")
+    public ResponseEntity<ContractResponseDTO> completeContract(@PathVariable Long id) {
+        ContractResponseDTO updatedContract = contractService.updateStatus(id, Status.COMPLETED);
+        return ResponseEntity.ok(updatedContract);
+    }
+}

@@ -27,10 +27,6 @@ public class ContractDTO {
     @NotNull(message = "O valor acordado é obrigatório")
     private Double agreed_value;
 
-    private Boolean driver_accepted = true;
-
-    private Boolean client_accepted = false;
-
     private String display_name;
 
     // Getters and Setters
@@ -96,22 +92,6 @@ public class ContractDTO {
 
     public void setAgreed_value(Double agreed_value) {
         this.agreed_value = agreed_value;
-    }
-
-    public Boolean getDriver_accepted() {
-        return driver_accepted;
-    }
-
-    public void setDriver_accepted(Boolean driver_accepted) {
-        this.driver_accepted = driver_accepted;
-    }
-
-    public Boolean getClient_accepted() {
-        return client_accepted;
-    }
-
-    public void setClient_accepted(Boolean client_accepted) {
-        this.client_accepted = client_accepted;
     }
 
     public String getDisplay_name() {

@@ -1,5 +1,6 @@
 package br.com.express_frete.fretesexpress.model;
 
+import br.com.express_frete.fretesexpress.model.enums.Status;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import java.time.LocalDate;
@@ -41,11 +42,15 @@ public class Contract {
     @Column(name = "agreed_value")
     private Double agreedValue;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
+    private Status status;
+
     @Column(name = "driver_accepted")
-    private Boolean driverAccepted = false;
+    private Boolean driverAccepted;
 
     @Column(name = "client_accepted")
-    private Boolean clientAccepted = false;
+    private Boolean clientAccepted;
 
     // Método para gerar nome descritivo do contrato
     @Transient
@@ -127,19 +132,19 @@ public class Contract {
         this.agreedValue = agreedValue;
     }
 
-    public Boolean getDriverAccepted() {
-        return driverAccepted;
+    public Status getStatus() {
+        return status;
     }
 
-    public void setDriverAccepted(Boolean driverAccepted) {
-        this.driverAccepted = driverAccepted;
+    public void setStatus(Status status) {
+        this.status = status;
     }
 
-    public Boolean getClientAccepted() {
-        return clientAccepted;
-    }
+    public Boolean getDriverAccepted() { return driverAccepted; }
 
-    public void setClientAccepted(Boolean clientAccepted) {
-        this.clientAccepted = clientAccepted;
-    }
+    public void setDriverAccepted(Boolean driverAccepted) { this.driverAccepted = driverAccepted; }
+
+    public Boolean getClientAccepted() { return clientAccepted; }
+
+    public void setClientAccepted(Boolean clientAccepted) { this.clientAccepted = clientAccepted; }
 }
