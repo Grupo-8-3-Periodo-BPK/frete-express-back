@@ -9,6 +9,7 @@ import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import java.util.List;
+import java.util.Locale;
 
 
 @Service
@@ -51,7 +52,8 @@ public class RouteService {
                         .getSegments().get(0)
                         .getDistance();
 
-                return "Distance: " + String.format("%.2f", (distance / 1000)) + "KM";
+            return "Distance: " + String.format(Locale.US, "%.2f", (distance / 1000)) + "KM";
+
         } catch (JsonMappingException e) {
             throw new RuntimeException(e);
         } catch (JsonProcessingException e) {
