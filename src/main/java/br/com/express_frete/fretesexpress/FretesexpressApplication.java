@@ -13,6 +13,7 @@ import br.com.express_frete.fretesexpress.model.Tracking;
 import br.com.express_frete.fretesexpress.model.User;
 import br.com.express_frete.fretesexpress.model.Vehicle;
 import br.com.express_frete.fretesexpress.model.enums.Role;
+import br.com.express_frete.fretesexpress.model.enums.Status;
 import br.com.express_frete.fretesexpress.model.enums.VehicleCategory;
 import br.com.express_frete.fretesexpress.model.enums.BodyType;
 import br.com.express_frete.fretesexpress.repository.ContractRepository;
@@ -135,8 +136,7 @@ public class FretesexpressApplication {
 				contract.setDriver(driver);
 				contract.setFreight(freight);
 				contract.setVehicle(vehicle);
-				contract.setDriverAccepted(true);
-				contract.setClientAccepted(true);
+				contract.setStatus(Status.ACTIVE);
 				contract.setPickupDate(LocalDate.now());
 				contract.setDeliveryDate(LocalDate.now().plusDays(7));
 				contract.setAgreedValue(2500.00);
@@ -148,8 +148,7 @@ public class FretesexpressApplication {
 				contract2.setDriver(driver);
 				contract2.setFreight(freight2);
 				contract2.setVehicle(vehicle);
-				contract2.setDriverAccepted(true);
-				contract2.setClientAccepted(false);
+				contract2.setStatus(Status.PENDING_CLIENT_APPROVAL);
 				contract2.setPickupDate(LocalDate.now().plusDays(1));
 				contract2.setDeliveryDate(LocalDate.now().plusDays(5));
 				contract2.setAgreedValue(1800.00);

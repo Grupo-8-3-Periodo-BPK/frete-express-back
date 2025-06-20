@@ -3,6 +3,7 @@ package br.com.express_frete.fretesexpress.repository;
 import br.com.express_frete.fretesexpress.model.Contract;
 import br.com.express_frete.fretesexpress.model.User;
 import br.com.express_frete.fretesexpress.model.Freight;
+import br.com.express_frete.fretesexpress.model.enums.Status;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -15,4 +16,6 @@ public interface ContractRepository extends JpaRepository<Contract, Long> {
     List<Contract> findByDriver(User driver);
 
     List<Contract> findByFreight(Freight freight);
+
+    List<Contract> findByFreightAndStatus(Freight freight, Status status);
 }
