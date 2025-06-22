@@ -14,6 +14,7 @@ import br.com.express_frete.fretesexpress.repository.FreightRepository;
 import br.com.express_frete.fretesexpress.repository.UserRepository;
 import br.com.express_frete.fretesexpress.repository.VehicleRepository;
 import br.com.express_frete.fretesexpress.repository.TrackingRepository;
+import br.com.express_frete.fretesexpress.service.RouteService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -39,6 +40,9 @@ public class ContractService {
 
     @Autowired
     private TrackingRepository trackingRepository;
+
+    @Autowired
+    private RouteService routeService;
 
     private ContractResponseDTO convertToDTO(Contract contract) {
         return new ContractResponseDTO(
@@ -145,15 +149,47 @@ public class ContractService {
         // Ex: Não pode cancelar um contrato já concluído.
 
         contract.setStatus(newStatus);
-        return convertToDTO(contractRepository.save(contract));
+        Contract savedContract = contractRepository.save(contract);
+
+        // Se o contrato está começando, criar o registro de rastreamento
+        if (newStatus == Status.IN_PROGRESS) {
+            Freight freight = savedContract.getFreight();
+
+            String originAddress = freight.getOrigin_city() + ", " + freight.getOrigin_state() + ", Brasil";
+            String destinationAddress = freight.getDestination_city() + ", " + freight.getDestination_state()
+                    + ", Brasil";
+
+            String originCoordsStr = routeService.getCoordinates(originAddress);
+            String destinationCoordsStr = routeService.getCoordinates(destinationAddress);
+
+            String[] originCoords = originCoordsStr.split(",");
+            String[] destinationCoords = destinationCoordsStr.split(",");
+
+            double originLon = Double.parseDouble(originCoords[0]);
+            double originLat = Double.parseDouble(originCoords[1]);
+            double destLon = Double.parseDouble(destinationCoords[0]);
+            double destLat = Double.parseDouble(destinationCoords[1]);
+
+            Tracking tracking = trackingRepository.findByContract(savedContract).orElse(new Tracking());
+            tracking.setContract(savedContract);
+            tracking.setOriginLongitude(originLon);
+            tracking.setOriginLatitude(originLat);
+            tracking.setDestinationLongitude(destLon);
+            tracking.setDestinationLatitude(destLat);
+            tracking.setCurrentLongitude(originLon);
+            tracking.setCurrentLatitude(originLat);
+
+            trackingRepository.save(tracking);
+        }
+
+        return convertToDTO(savedContract);
     }
 
     public void delete(Long id) {
         Contract contract = contractRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Contract not found with id: " + id));
 
-        List<Tracking> trackings = trackingRepository.findByContract(contract);
-        trackingRepository.deleteAll(trackings);
+        trackingRepository.findByContract(contract).ifPresent(trackingRepository::delete);
 
         contractRepository.delete(contract);
     }

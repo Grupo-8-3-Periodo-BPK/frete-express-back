@@ -11,21 +11,27 @@ public class Tracking {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "freight_id", nullable = false)
-    private Freight freight;
+    @Column(name = "current_latitude")
+    private Double currentLatitude;
 
-    @Size(max = 255)
-    @Column(name = "current_location")
-    private String currentLocation;
+    @Column(name = "current_longitude")
+    private Double currentLongitude;
+
+    @Column(name = "origin_latitude")
+    private Double originLatitude;
+
+    @Column(name = "origin_longitude")
+    private Double originLongitude;
+
+    @Column(name = "destination_latitude")
+    private Double destinationLatitude;
+
+    @Column(name = "destination_longitude")
+    private Double destinationLongitude;
 
     @ManyToOne
-    @JoinColumn(name = "contract_id", nullable = false)
+    @JoinColumn(name = "contract_id", nullable = false, unique = true)
     private Contract contract;
-
-    @ManyToOne
-    @JoinColumn(name = "contract_user_id")
-    private User contractUser;
 
     // Getters and Setters
     public Long getId() {
@@ -36,20 +42,52 @@ public class Tracking {
         this.id = id;
     }
 
-    public Freight getFreight() {
-        return freight;
+    public Double getCurrentLatitude() {
+        return currentLatitude;
     }
 
-    public void setFreight(Freight freight) {
-        this.freight = freight;
+    public void setCurrentLatitude(Double currentLatitude) {
+        this.currentLatitude = currentLatitude;
     }
 
-    public String getCurrentLocation() {
-        return currentLocation;
+    public Double getCurrentLongitude() {
+        return currentLongitude;
     }
 
-    public void setCurrentLocation(String currentLocation) {
-        this.currentLocation = currentLocation;
+    public void setCurrentLongitude(Double currentLongitude) {
+        this.currentLongitude = currentLongitude;
+    }
+
+    public Double getOriginLatitude() {
+        return originLatitude;
+    }
+
+    public void setOriginLatitude(Double originLatitude) {
+        this.originLatitude = originLatitude;
+    }
+
+    public Double getOriginLongitude() {
+        return originLongitude;
+    }
+
+    public void setOriginLongitude(Double originLongitude) {
+        this.originLongitude = originLongitude;
+    }
+
+    public Double getDestinationLatitude() {
+        return destinationLatitude;
+    }
+
+    public void setDestinationLatitude(Double destinationLatitude) {
+        this.destinationLatitude = destinationLatitude;
+    }
+
+    public Double getDestinationLongitude() {
+        return destinationLongitude;
+    }
+
+    public void setDestinationLongitude(Double destinationLongitude) {
+        this.destinationLongitude = destinationLongitude;
     }
 
     public Contract getContract() {
@@ -58,13 +96,5 @@ public class Tracking {
 
     public void setContract(Contract contract) {
         this.contract = contract;
-    }
-
-    public User getContractUser() {
-        return contractUser;
-    }
-
-    public void setContractUser(User contractUser) {
-        this.contractUser = contractUser;
     }
 }

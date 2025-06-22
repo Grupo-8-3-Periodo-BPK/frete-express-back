@@ -3,6 +3,7 @@ package br.com.express_frete.fretesexpress.config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -34,8 +35,19 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/users/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
-
                         .requestMatchers("/api/recovery/**").permitAll()
+                        .requestMatchers("/api/directions/**").permitAll()
+                        .requestMatchers("/api/geocode/**").permitAll()
+
+                        // Permissões para Contratos
+                        .requestMatchers(HttpMethod.GET, "/api/contracts/**")
+                        .hasAnyAuthority("ROLE_CLIENT", "ROLE_DRIVER", "ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/contracts").hasAuthority("ROLE_DRIVER")
+                        .requestMatchers(HttpMethod.PATCH, "/api/contracts/**")
+                        .hasAnyAuthority("ROLE_CLIENT", "ROLE_DRIVER")
+
+                        // Permissões para Tracking
+                        .requestMatchers("/api/tracking/**").hasAnyAuthority("ROLE_CLIENT", "ROLE_DRIVER")
 
                         // Swagger/OpenAPI endpoints
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()

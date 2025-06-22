@@ -30,14 +30,8 @@ public class TrackingController {
 
     @PostMapping
     public ResponseEntity<Tracking> createTracking(@Valid @RequestBody TrackingDTO trackingDTO) {
-        Tracking createdTracking = trackingService.create(trackingDTO);
+        Tracking createdTracking = trackingService.createOrUpdate(trackingDTO);
         return new ResponseEntity<>(createdTracking, HttpStatus.CREATED);
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<Tracking> updateTracking(@PathVariable Long id, @Valid @RequestBody TrackingDTO trackingDTO) {
-        Tracking updatedTracking = trackingService.update(id, trackingDTO);
-        return ResponseEntity.ok(updatedTracking);
     }
 
     @DeleteMapping("/{id}")
@@ -46,18 +40,14 @@ public class TrackingController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/freight/{freightId}")
-    public ResponseEntity<List<Tracking>> getTrackingsByFreight(@PathVariable Long freightId) {
-        return ResponseEntity.ok(trackingService.findByFreight(freightId));
-    }
-
     @GetMapping("/contract/{contractId}")
-    public ResponseEntity<List<Tracking>> getTrackingsByContract(@PathVariable Long contractId) {
+    public ResponseEntity<Tracking> getTrackingsByContract(@PathVariable Long contractId) {
         return ResponseEntity.ok(trackingService.findByContract(contractId));
     }
 
     @GetMapping("/contract/{contractId}/latest")
     public ResponseEntity<Tracking> getLatestTrackingForContract(@PathVariable Long contractId) {
-        return ResponseEntity.ok(trackingService.getLatestTrackingForContract(contractId));
+        Tracking latestTracking = trackingService.getLatestTrackingForContract(contractId);
+        return ResponseEntity.ok(latestTracking);
     }
-} 
+}

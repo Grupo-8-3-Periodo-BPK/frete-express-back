@@ -1,45 +1,71 @@
 package br.com.express_frete.fretesexpress.dto;
 
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 
 public class TrackingDTO {
-    private Long id;
 
-    @NotNull(message = "O frete é obrigatório")
-    private Long freightId;
+    @NotNull(message = "A latitude atual é obrigatória")
+    private Double currentLatitude;
 
-    @Size(max = 255, message = "A localização atual deve ter no máximo 255 caracteres")
-    private String currentLocation;
+    @NotNull(message = "A longitude atual é obrigatória")
+    private Double currentLongitude;
+
+    private Double originLatitude;
+    private Double originLongitude;
+    private Double destinationLatitude;
+    private Double destinationLongitude;
 
     @NotNull(message = "O contrato é obrigatório")
     private Long contractId;
 
-    private Long contractUserId;
-
     // Getters and Setters
-    public Long getId() {
-        return id;
+
+    public Double getCurrentLatitude() {
+        return currentLatitude;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setCurrentLatitude(Double currentLatitude) {
+        this.currentLatitude = currentLatitude;
     }
 
-    public Long getFreightId() {
-        return freightId;
+    public Double getCurrentLongitude() {
+        return currentLongitude;
     }
 
-    public void setFreightId(Long freightId) {
-        this.freightId = freightId;
+    public void setCurrentLongitude(Double currentLongitude) {
+        this.currentLongitude = currentLongitude;
     }
 
-    public String getCurrentLocation() {
-        return currentLocation;
+    public Double getOriginLatitude() {
+        return originLatitude;
     }
 
-    public void setCurrentLocation(String currentLocation) {
-        this.currentLocation = currentLocation;
+    public void setOriginLatitude(Double originLatitude) {
+        this.originLatitude = originLatitude;
+    }
+
+    public Double getOriginLongitude() {
+        return originLongitude;
+    }
+
+    public void setOriginLongitude(Double originLongitude) {
+        this.originLongitude = originLongitude;
+    }
+
+    public Double getDestinationLatitude() {
+        return destinationLatitude;
+    }
+
+    public void setDestinationLatitude(Double destinationLatitude) {
+        this.destinationLatitude = destinationLatitude;
+    }
+
+    public Double getDestinationLongitude() {
+        return destinationLongitude;
+    }
+
+    public void setDestinationLongitude(Double destinationLongitude) {
+        this.destinationLongitude = destinationLongitude;
     }
 
     public Long getContractId() {
@@ -48,13 +74,5 @@ public class TrackingDTO {
 
     public void setContractId(Long contractId) {
         this.contractId = contractId;
-    }
-
-    public Long getContractUserId() {
-        return contractUserId;
-    }
-
-    public void setContractUserId(Long contractUserId) {
-        this.contractUserId = contractUserId;
     }
 }

@@ -137,17 +137,17 @@ public class FreightController {
 
             var contracts = contractRepository.findByFreight(freight);
             boolean hasActiveOrCompletedContracts = contracts.stream()
-                    .anyMatch(c -> c.getStatus() == Status.ACTIVE || c.getStatus() == Status.COMPLETED);
+                    .anyMatch(c -> c.getStatus() == Status.ACTIVE || c.getStatus() == Status.COMPLETED
+                            || c.getStatus() == Status.IN_PROGRESS);
 
             if (hasActiveOrCompletedContracts) {
                 return ResponseEntity.status(HttpStatus.CONFLICT)
-                        .body("Não é possível excluir este frete, pois ele possui contratos ativos ou concluídos.");
+                        .body("Não é possível excluir este frete, pois ele possui contratos ativos, em andamento ou concluídos.");
             }
 
             // Para cada contrato pendente/rejeitado, exclui os trackings associados
             contracts.forEach(contract -> {
-                var trackings = trackingRepository.findByContract(contract);
-                trackingRepository.deleteAll(trackings);
+                trackingRepository.findByContract(contract).ifPresent(trackingRepository::delete);
             });
 
             // Exclui os contratos pendentes/rejeitados

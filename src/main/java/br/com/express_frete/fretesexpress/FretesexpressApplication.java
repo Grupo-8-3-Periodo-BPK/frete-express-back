@@ -156,19 +156,14 @@ public class FretesexpressApplication {
 
 				// Criar tracking para o primeiro contrato
 				Tracking tracking1 = new Tracking();
-				tracking1.setFreight(freight);
 				tracking1.setContract(contract);
-				tracking1.setCurrentLocation("São Paulo, SP - Depósito Central");
-				tracking1.setContractUser(admin);
+				tracking1.setCurrentLatitude(-23.561399); // Posição atual em SP
+				tracking1.setCurrentLongitude(-46.656498);
+				tracking1.setOriginLatitude(-23.550520); // Origem: São Paulo
+				tracking1.setOriginLongitude(-46.633308);
+				tracking1.setDestinationLatitude(-22.906847); // Destino: Rio de Janeiro
+				tracking1.setDestinationLongitude(-43.172897);
 				trackingRepository.save(tracking1);
-
-				// Criar outro tracking para o mesmo contrato
-				Tracking tracking2 = new Tracking();
-				tracking2.setFreight(freight);
-				tracking2.setContract(contract);
-				tracking2.setCurrentLocation("Rodovia Dutra, KM 200");
-				tracking2.setContractUser(driver);
-				trackingRepository.save(tracking2);
 
 				System.out.println("Dados inicializados com sucesso!");
 			} else {

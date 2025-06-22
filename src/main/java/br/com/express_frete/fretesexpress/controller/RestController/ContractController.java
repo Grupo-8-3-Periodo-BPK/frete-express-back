@@ -86,4 +86,10 @@ public class ContractController {
         ContractResponseDTO updatedContract = contractService.updateStatus(id, Status.COMPLETED);
         return ResponseEntity.ok(updatedContract);
     }
+
+    @PatchMapping("/{id}/start")
+    public ResponseEntity<ContractResponseDTO> startContract(@PathVariable Long id) {
+        ContractResponseDTO updatedContract = contractService.updateStatus(id, Status.IN_PROGRESS);
+        return ResponseEntity.ok(updatedContract);
+    }
 }
