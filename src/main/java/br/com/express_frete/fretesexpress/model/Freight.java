@@ -57,6 +57,9 @@ public class Freight {
     @Column(name = "status")
     private FreightStatus status = FreightStatus.AVAILABLE;
 
+    @Transient
+    private String clientPhoneNumber;
+
     // Getters e Setters
 
     public Long getId() {
@@ -177,5 +180,13 @@ public class Freight {
 
     public void setStatus(FreightStatus status) {
         this.status = status;
+    }
+
+    public String getClientPhoneNumber() {
+        return clientPhoneNumber;
+    }
+
+    public void setClientPhoneNumber(String clientPhoneNumber) {
+        this.clientPhoneNumber = clientPhoneNumber;
     }
 }

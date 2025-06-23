@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import br.com.express_frete.fretesexpress.dto.UserUpdateDTO;
+
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
@@ -158,22 +160,27 @@ public class UserController {
 
     // PUT: Update existing user
     @PutMapping("/{id}")
-    public ResponseEntity<?> update(@PathVariable Long id, @RequestBody @Valid User user) {
+    public ResponseEntity<?> update(@PathVariable Long id, @RequestBody UserUpdateDTO userUpdateDTO) {
         try {
-            User updatedUser = userService.update(id, user);
+            User updatedUser = userService.update(id, userUpdateDTO);
             if (updatedUser != null) {
                 return ResponseEntity.ok(updatedUser);
             } else {
                 return ResponseEntity.notFound().build();
             }
-        } catch (ConstraintViolationException e) {
-            Map<String, String> errors = new HashMap<>();
-            e.getConstraintViolations().forEach(violation -> {
-                String fieldName = violation.getPropertyPath().toString();
-                String message = violation.getMessage();
-                errors.put(fieldName, message);
-            });
-            return ResponseEntity.badRequest().body(errors);
+        } catch (DataIntegrityViolationException e) {
+            Map<String, String> error = new HashMap<>();
+            String causeMessage = e.getMostSpecificCause().getMessage();
+            if (causeMessage.contains("user_username_key")) {
+                error.put("error", "Nome de usuário já existe.");
+            } else if (causeMessage.contains("user_email_key")) {
+                error.put("error", "E-mail já cadastrado.");
+            } else if (causeMessage.contains("user_cpf_cnpj_key")) {
+                error.put("error", "CPF/CNPJ já cadastrado.");
+            } else {
+                error.put("error", "Erro de integridade dos dados.");
+            }
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
         } catch (Exception e) {
             Map<String, String> error = new HashMap<>();
             error.put("error", e.getMessage());

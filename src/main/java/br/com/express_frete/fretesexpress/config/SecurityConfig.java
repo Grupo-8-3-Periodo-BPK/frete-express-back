@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -29,15 +30,18 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable())
+                .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/users/**").permitAll()
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/recovery/**").permitAll()
-                        .requestMatchers("/api/directions/**").permitAll()
-                        .requestMatchers("/api/geocode/**").permitAll()
+                        .requestMatchers("/api/auth/**", "/api/recovery/**", "/api/directions/**", "/api/geocode/**")
+                        .permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/users/register/client", "/api/users/register/driver")
+                        .permitAll()
+                        .requestMatchers("/api/users/**").hasAnyAuthority("ROLE_CLIENT", "ROLE_DRIVER", "ROLE_ADMIN")
+
+                        // Rotas de Admin
+                        .requestMatchers("/api/admin/**").hasAuthority("ROLE_ADMIN")
 
                         // Permissões para Contratos
                         .requestMatchers(HttpMethod.GET, "/api/contracts/**")
@@ -46,8 +50,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PATCH, "/api/contracts/**")
                         .hasAnyAuthority("ROLE_CLIENT", "ROLE_DRIVER")
 
+                        // Permissões para Fretes (NOVA REGRA)
+                        .requestMatchers("/api/freights/**").hasAnyAuthority("ROLE_CLIENT", "ROLE_DRIVER", "ROLE_ADMIN")
+
                         // Permissões para Tracking
-                        .requestMatchers("/api/tracking/**").hasAnyAuthority("ROLE_CLIENT", "ROLE_DRIVER")
+                        .requestMatchers("/api/tracking/**").hasAnyAuthority("ROLE_CLIENT", "ROLE_DRIVER", "ROLE_ADMIN")
 
                         // Swagger/OpenAPI endpoints
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()

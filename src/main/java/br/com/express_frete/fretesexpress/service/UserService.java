@@ -1,6 +1,7 @@
 package br.com.express_frete.fretesexpress.service;
 
 import br.com.express_frete.fretesexpress.Validation.DriverValidation;
+import br.com.express_frete.fretesexpress.dto.UserUpdateDTO;
 import br.com.express_frete.fretesexpress.model.User;
 import br.com.express_frete.fretesexpress.model.enums.Role;
 import br.com.express_frete.fretesexpress.repository.UserRepository;
@@ -82,6 +83,28 @@ public class UserService {
 
     public void delete(Long id) {
         userRepository.deleteById(id);
+    }
+
+    public User update(Long id, UserUpdateDTO updatedData) {
+        return userRepository.findById(id).map(user -> {
+            if (updatedData.getName() != null && !updatedData.getName().isEmpty()) {
+                user.setName(updatedData.getName());
+            }
+
+            if (updatedData.getEmail() != null && !updatedData.getEmail().isEmpty()) {
+                user.setEmail(updatedData.getEmail());
+            }
+
+            if (updatedData.getPhone() != null) {
+                user.setPhone(updatedData.getPhone());
+            }
+
+            if (updatedData.getPassword() != null && !updatedData.getPassword().isEmpty()) {
+                user.setPassword(passwordEncoder.encode(updatedData.getPassword()));
+            }
+
+            return userRepository.save(user);
+        }).orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + id));
     }
 
     public User update(Long id, User updatedData) {

@@ -9,6 +9,7 @@ import br.com.express_frete.fretesexpress.model.enums.Status;
 import br.com.express_frete.fretesexpress.repository.ContractRepository;
 import br.com.express_frete.fretesexpress.repository.FreightRepository;
 import br.com.express_frete.fretesexpress.repository.TrackingRepository;
+import br.com.express_frete.fretesexpress.repository.UserRepository;
 import br.com.express_frete.fretesexpress.service.FreightService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -35,6 +36,9 @@ public class FreightController {
 
     @Autowired
     private TrackingRepository trackingRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @Autowired
     private FreightService freightService;
@@ -85,7 +89,14 @@ public class FreightController {
 
     @GetMapping("/{id}")
     public Freight getById(@PathVariable Long id) {
-        return repository.findById(id).orElse(null);
+        Freight freight = repository.findById(id).orElse(null);
+        if (freight != null) {
+            User client = userRepository.findById(freight.getUserId()).orElse(null);
+            if (client != null) {
+                freight.setClientPhoneNumber(client.getPhone());
+            }
+        }
+        return freight;
     }
 
     @PutMapping("/{id}")
