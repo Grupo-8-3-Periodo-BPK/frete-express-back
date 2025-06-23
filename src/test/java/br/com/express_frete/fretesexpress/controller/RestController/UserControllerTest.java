@@ -28,7 +28,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(controllers = UserController.class)
+@WebMvcTest(UserController.class)
 @ContextConfiguration(classes = {UserController.class})
 @AutoConfigureMockMvc(addFilters = false)
 class UserControllerTest {
@@ -113,5 +113,23 @@ class UserControllerTest {
 
         mockMvc.perform(delete("/api/users/1"))
                 .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void InvalidCpfProvided() throws Exception {
+        String customerJson = """
+            {
+                "name": "João Silva",
+                "email": "joao@email.com",
+                "cpf": "12345678900",
+                "password": "password123"
+            }
+        """;
+
+        mockMvc.perform(post("/api/users/register/client")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(customerJson))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("CPF Inválido."));
     }
 }

@@ -15,6 +15,10 @@ import br.com.express_frete.fretesexpress.repository.TrackingRepository;
 import br.com.express_frete.fretesexpress.service.FreightService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+
+import io.restassured.response.Response;
+
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,7 +26,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -34,15 +38,28 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import static io.restassured.RestAssured.given;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import io.restassured.RestAssured;
+import io.restassured.http.ContentType;
+import static org.hamcrest.Matchers.*;
 
 @ExtendWith(MockitoExtension.class)
 class FreightControllerTest {
+    private static final String BASE_URL = "http://localhost:8080";
+    private static final String ENDPOINT = "/api/fretes/reservar";
+    private static final String TOKEN = "Bearer TOKEN_VALIDO_AQUI";
 
+    @BeforeAll
+    public static void setup() {
+        RestAssured.baseURI = BASE_URL;
+    }
+    
     @Mock
     private FreightRepository freightRepository;
 
@@ -195,7 +212,7 @@ class FreightControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(freightRequestDTO)))
                 .andExpect(status().isUnauthorized())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Usuário não autenticado")));
+                .andExpect(content().string(containsString("Usuário não autenticado")));
 
         verify(freightRepository, never()).save(any());
     }
@@ -210,7 +227,7 @@ class FreightControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(freightRequestDTO)))
                 .andExpect(status().isUnauthorized())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("tipo de principal inválido")));
+                .andExpect(content().string(containsString("tipo de principal inválido")));
 
         verify(freightRepository, never()).save(any());
     }
@@ -261,7 +278,7 @@ class FreightControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(freightUpdateDTO)))
                 .andExpect(status().isUnauthorized())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Usuário não autenticado")));
+                .andExpect(content().string(containsString("Usuário não autenticado")));
 
         verify(freightRepository, never()).findById(anyLong());
         verify(freightRepository, never()).save(any());
@@ -283,7 +300,7 @@ class FreightControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(freightUpdateDTO)))
                 .andExpect(status().isForbidden())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("não tem permissão para editar")));
+                .andExpect(content().string(containsString("não tem permissão para editar")));
 
         verify(freightRepository).findById(1L);
         verify(freightRepository, never()).save(any());
@@ -298,7 +315,7 @@ class FreightControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(freightUpdateDTO)))
                 .andExpect(status().isNotFound())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Frete não encontrado")));
+                .andExpect(content().string(containsString("Frete não encontrado")));
 
         verify(freightRepository).findById(999L);
         verify(freightRepository, never()).save(any());
@@ -324,7 +341,7 @@ class FreightControllerTest {
 
         mockMvc.perform(delete("/api/freights/1"))
                 .andExpect(status().isUnauthorized())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Usuário não autenticado")));
+                .andExpect(content().string(containsString("Usuário não autenticado")));
 
         verify(freightRepository, never()).findById(anyLong());
         verify(freightRepository, never()).delete(any());
@@ -344,7 +361,7 @@ class FreightControllerTest {
 
         mockMvc.perform(delete("/api/freights/1"))
                 .andExpect(status().isForbidden())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("não tem permissão para excluir")));
+                .andExpect(content().string(containsString("não tem permissão para excluir")));
 
         verify(freightRepository).findById(1L);
         verify(freightRepository, never()).delete(any());
@@ -363,7 +380,7 @@ class FreightControllerTest {
 
         mockMvc.perform(delete("/api/freights/1"))
                 .andExpect(status().isConflict())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("contratos ativos ou concluídos")));
+                .andExpect(content().string(containsString("contratos ativos ou concluídos")));
 
         verify(freightRepository).findById(1L);
         verify(contractRepository).findByFreight(testFreight);
@@ -383,7 +400,7 @@ class FreightControllerTest {
 
         mockMvc.perform(delete("/api/freights/1"))
                 .andExpect(status().isConflict())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("contratos ativos ou concluídos")));
+                .andExpect(content().string(containsString("contratos ativos ou concluídos")));
 
         verify(freightRepository).findById(1L);
         verify(contractRepository).findByFreight(testFreight);
@@ -423,9 +440,40 @@ class FreightControllerTest {
 
         mockMvc.perform(delete("/api/freights/999"))
                 .andExpect(status().isNotFound())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Frete não encontrado")));
+                .andExpect(content().string(containsString("Frete não encontrado")));
 
         verify(freightRepository).findById(999L);
         verify(freightRepository, never()).delete(any());
+    }
+
+    @Test
+    public void shouldReserveFreightValid() {
+        String payload = """
+        {
+            "origem": "Curitiba",
+            "destino": "São Paulo",
+            "data_coleta": "2025-07-01",
+            "peso": 800,
+            "veiculo_tipo": "caminhão-baú",
+            "observacoes": "Carga frágil, manusear com cuidado"
+        }
+        """;
+
+        Response response = given()
+                    .header("Authorization", TOKEN)
+                    .contentType(ContentType.JSON)
+                    .body(payload)
+                .when()
+                    .post(ENDPOINT)
+                .then()
+                    .statusCode(201)
+                    .body("id", notNullValue())
+                    .body("origem", equalTo("Curitiba"))
+                    .body("destino", equalTo("São Paulo"))
+                    .body("status", equalTo("reservado"))
+                    .extract().response();
+
+        String id = response.jsonPath().getString("id");
+        System.out.println("Frete reservado com ID: " + id);
     }
 }
