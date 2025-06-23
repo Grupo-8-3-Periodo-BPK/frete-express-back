@@ -88,15 +88,16 @@ public class FreightController {
     }
 
     @GetMapping("/{id}")
-    public Freight getById(@PathVariable Long id) {
-        Freight freight = repository.findById(id).orElse(null);
-        if (freight != null) {
-            User client = userRepository.findById(freight.getUserId()).orElse(null);
-            if (client != null) {
-                freight.setClientPhoneNumber(client.getPhone());
-            }
-        }
-        return freight;
+    public ResponseEntity<Freight> getById(@PathVariable Long id) {
+        return repository.findById(id)
+                .map(freight -> {
+                    User client = userRepository.findById(freight.getUserId()).orElse(null);
+                    if (client != null) {
+                        freight.setClientPhoneNumber(client.getPhone());
+                    }
+                    return ResponseEntity.ok(freight);
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{id}")

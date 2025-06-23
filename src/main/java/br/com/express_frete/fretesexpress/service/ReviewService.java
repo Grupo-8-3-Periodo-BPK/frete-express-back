@@ -91,9 +91,9 @@ public class ReviewService {
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
         if (user.getRole() == Role.CLIENT) {
-            return reviewRepository.findByClientAndType(user, "client");
+            return reviewRepository.findByClientAndType(user, "CLIENT");
         } else if (user.getRole() == Role.DRIVER) {
-            return reviewRepository.findByDriverAndType(user, "driver");
+            return reviewRepository.findByDriverAndType(user, "DRIVER");
         }
 
         throw new IllegalArgumentException("User does not have permission to make reviews");
@@ -104,9 +104,9 @@ public class ReviewService {
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
         if (user.getRole() == Role.CLIENT) {
-            return reviewRepository.findByClientAndType(user, "driver");
+            return reviewRepository.findByClientAndType(user, "DRIVER");
         } else if (user.getRole() == Role.DRIVER) {
-            return reviewRepository.findByDriverAndType(user, "client");
+            return reviewRepository.findByDriverAndType(user, "CLIENT");
         }
 
         throw new IllegalArgumentException("User does not have permission to receive reviews");

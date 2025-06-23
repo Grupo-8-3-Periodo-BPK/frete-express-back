@@ -1,63 +1,46 @@
-// package br.com.express_frete.fretesexpress.service;
+package br.com.express_frete.fretesexpress.service;
 
-// import com.icegreen.greenmail.configuration.GreenMailConfiguration;
-// import com.icegreen.greenmail.junit5.GreenMailExtension;
-// import com.icegreen.greenmail.util.ServerSetupTest;
-// import jakarta.mail.MessagingException;
-// import jakarta.mail.internet.MimeMessage;
-// import org.junit.jupiter.api.Test;
-// import org.junit.jupiter.api.extension.RegisterExtension;
-// import org.springframework.beans.factory.annotation.Autowired;
-// import org.springframework.boot.test.context.SpringBootTest;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.*;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 
-// import static org.junit.jupiter.api.Assertions.assertEquals;
-// import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.*;
 
-// @SpringBootTest
-// public class EmailServiceTest {
+public class EmailServiceTest {
 
-//     @RegisterExtension
-//     static GreenMailExtension greenMail = new GreenMailExtension(ServerSetupTest.SMTP)
-//             .withConfiguration(GreenMailConfiguration.aConfig().withUser("teste", "teste"))
-//             .withPerMethodLifecycle(false);
+    @InjectMocks
+    private EmailService emailService;
 
-//     @Autowired
-//     private EmailService emailService;
+    @Mock
+    private JavaMailSender mailSender;
 
-//     @Test
-//     public void testEnviarEmail() throws MessagingException {
-//         // Dados de teste
-//         String to = "destinatario@exemplo.com";
-//         String subject = "Teste de Configuração de E-mail";
-//         String content = "Este é um e-mail de teste para verificar se a configuração de e-mail está funcionando corretamente.";
+    @Captor
+    private ArgumentCaptor<SimpleMailMessage> messageCaptor;
 
-//         // Enviar e-mail
-//         emailService.sendSimpleEmail(to, subject, content);
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
 
-//         // Verificar se o e-mail foi recebido pelo GreenMail
-//         assertTrue(greenMail.waitForIncomingEmail(5000, 1), "E-mail não foi recebido");
+    @Test
+    void testSendSimpleEmail() {
+        // Arrange
+        String to = "teste@email.com";
+        String subject = "Assunto do Email";
+        String content = "Conteúdo do Email";
 
-//         // Recuperar e verificar a mensagem
-//         MimeMessage[] messages = greenMail.getReceivedMessages();
-//         assertEquals(1, messages.length, "Número de e-mails recebidos não corresponde ao esperado");
+        // Act
+        emailService.sendSimpleEmail(to, subject, content);
 
-//         MimeMessage message = messages[0];
-//         assertEquals(subject, message.getSubject(), "Assunto do e-mail não corresponde");
-//         assertEquals(to, message.getAllRecipients()[0].toString(), "Destinatário não corresponde");
+        // Assert
+        verify(mailSender).send(messageCaptor.capture());
+        SimpleMailMessage sentMessage = messageCaptor.getValue();
 
-//         // Converter o conteúdo da mensagem para String e comparar
-//         String body = GreenMailUtil.getBody(message);
-//         assertEquals(content, body, "Conteúdo do e-mail não corresponde");
-//     }
-// }
-
-// // Classe utilitária para acessar o corpo do e-mail
-// class GreenMailUtil {
-//     public static String getBody(MimeMessage message) throws MessagingException {
-//         try {
-//             return message.getContent().toString();
-//         } catch (Exception e) {
-//             return "";
-//         }
-//     }
-// }
+        assert sentMessage.getTo() != null;
+        assert sentMessage.getTo()[0].equals(to);
+        assert sentMessage.getSubject().equals(subject);
+        assert sentMessage.getText().equals(content);
+    }
+}
