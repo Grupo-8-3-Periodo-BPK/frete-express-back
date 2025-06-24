@@ -48,7 +48,7 @@ public class SecurityConfig {
                         .hasAnyAuthority("ROLE_CLIENT", "ROLE_DRIVER", "ROLE_ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/contracts").hasAuthority("ROLE_DRIVER")
                         .requestMatchers(HttpMethod.PATCH, "/api/contracts/**")
-                        .hasAnyAuthority("ROLE_CLIENT", "ROLE_DRIVER")
+                        .hasAnyAuthority("ROLE_CLIENT", "ROLE_DRIVER", "ROLE_ADMIN")
 
                         // Permissões para Fretes (NOVA REGRA)
                         .requestMatchers("/api/freights/**").hasAnyAuthority("ROLE_CLIENT", "ROLE_DRIVER", "ROLE_ADMIN")

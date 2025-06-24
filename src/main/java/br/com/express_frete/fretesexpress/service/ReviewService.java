@@ -64,10 +64,6 @@ public class ReviewService {
             client.incrementReviewsReceived();
         }
 
-        // Save updated users
-        userRepository.save(client);
-        userRepository.save(driver);
-
         // Save the review
         return reviewRepository.save(review);
     }
@@ -91,12 +87,14 @@ public class ReviewService {
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
         if (user.getRole() == Role.CLIENT) {
+            // A client makes a review of a driver
             return reviewRepository.findByClientAndType(user, "CLIENT");
         } else if (user.getRole() == Role.DRIVER) {
+            // A driver makes a review of a client
             return reviewRepository.findByDriverAndType(user, "DRIVER");
         }
 
-        throw new IllegalArgumentException("User does not have permission to make reviews");
+        throw new IllegalArgumentException("User does not have a valid role to make reviews");
     }
 
     public List<Review> findReviewsReceived(Long userId) {
@@ -104,12 +102,14 @@ public class ReviewService {
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
         if (user.getRole() == Role.CLIENT) {
+            // A client receives a review from a driver
             return reviewRepository.findByClientAndType(user, "DRIVER");
         } else if (user.getRole() == Role.DRIVER) {
+            // A driver receives a review from a client
             return reviewRepository.findByDriverAndType(user, "CLIENT");
         }
 
-        throw new IllegalArgumentException("User does not have permission to receive reviews");
+        throw new IllegalArgumentException("User does not have a valid role to receive reviews");
     }
 
     // Additional method to get only the total of reviews made
